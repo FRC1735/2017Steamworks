@@ -14,6 +14,8 @@ package org.usfirst.frc1735.Steamworks2017.subsystems;
 import org.usfirst.frc1735.Steamworks2017.RobotMap;
 import org.usfirst.frc1735.Steamworks2017.commands.*;
 import com.ctre.CANTalon;
+
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.command.Subsystem;
@@ -48,6 +50,17 @@ public class DriveTrain extends Subsystem {
 
         // Set the default command for a subsystem here.
         // setDefaultCommand(new MySpecialCommand());
+    }
+    
+    public void tankDriveWithJoysticks(Joystick left, Joystick right) {
+    double driveLeft = left.getY();	
+    double driveRight = right.getY();
+    this.tankDrive(-driveLeft, -driveRight);
+    
+    }
+    
+    public void tankDrive(double driveLeft,double driveRight) {
+    	robotDrive21.tankDrive(driveLeft, driveRight);
     }
 }
 
