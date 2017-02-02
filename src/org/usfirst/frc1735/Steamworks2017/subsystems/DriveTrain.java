@@ -60,6 +60,12 @@ public class DriveTrain extends Subsystem {
         // setDefaultCommand(new MySpecialCommand());
     }
     
+    // Override constructor to initialize variables to defaults
+    public DriveTrain() {
+    	this.setTractionMode(); // Default to traction mode on startup.
+    	
+    }
+    
     public void arcadeDrive(double moveValue,double rotateValue) {
     	boolean squaredInputs = false; // Do not use decreased sensitivity at low speeds.
     	// Make sure we are in Traction mode:
