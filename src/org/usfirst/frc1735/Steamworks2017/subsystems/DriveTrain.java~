@@ -85,16 +85,26 @@ public class DriveTrain extends Subsystem {
     }
 
 	public void octaCanumDriveWithJoysticks(Joystick joyLeft, Joystick joyRight) {
-		// See if we can get the right-side analog joystick from the Xbox360 controller
-		//System.out.println("Right controller Y value is : " + joyRight.
-
-		//System.out.println("LJoyY="+joyLeft.getY()+" LJoyX="+joyLeft.getX() + "RJoyY="+joyRight.getY()+" RJoyX="+joyRight.getX());
 		// Extract the joystick values
-		double joyLeftX  = joyLeft.getX();
-		double joyLeftY  = joyLeft.getY();
-		double joyRightX = joyRight.getX();
-		double joyRightY = joyRight.getY();
+		double joyLeftX, joyLeftY, joyRightX, joyRightY;
 		
+		// If an Xbox controller, try using the two sticks on controller 1 (Right side) instead of using two joysticks
+		if (joyLeft.getIsXbox()) {
+			joyLeftX = joyRight.getRawAxis(0);  // Left stick X
+			joyLeftY = joyRight.getRawAxis(1);  // Left stick Y
+			joyRightX = joyRight.getRawAxis(4); // Right stick X
+			joyRightY = joyRight.getRawAxis(5); // Right stick Y
+		}
+		else {
+			joyLeftX  = joyLeft.getX();
+			joyLeftY  = joyLeft.getY();
+			joyRightX = joyRight.getX();
+			joyRightY = joyRight.getY();
+		}
+
+		// Print the raw joystick inputs
+		System.out.println("joyLeftY="+joyLeftY+" joyLeftX="+joyLeftX + " joyRightY="+joyRightY+" joyRightX="+joyRightX);
+
 		// Apply the 'dead zone' guardband to the joystick inputs:
 		// Centered joysticks may not actually read as zero due to spring variances.
 		// Therfore, remove any small values as being "noise".

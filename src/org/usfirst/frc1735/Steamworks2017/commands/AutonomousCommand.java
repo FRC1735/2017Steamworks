@@ -43,8 +43,8 @@ public class AutonomousCommand extends Command {
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-    	Robot.driveTrain.arcadeDrive(1, 0); //move, rotate
-    	//Robot.driveTrain.mecanumDrive(1, 0, 0); //X,Y,Rotation
+    	//Robot.driveTrain.arcadeDrive(1, 0); //move, rotate
+    	Robot.driveTrain.mecanumDrive(0, 1, 0); //X,Y,Rotation
     }
 
     // Make this return true when this Command no longer needs to run execute()

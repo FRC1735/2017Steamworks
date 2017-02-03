@@ -64,12 +64,11 @@ public class OI {
 
         joyRight = new Joystick(1);
         
+        forceMecanumButton.whileHeld(new ForceMecanumMode());
+        toggleDrivetrainButton = new JoystickButton(joyRight, 2);
+        toggleDrivetrainButton.whenPressed(new ToggleDrivetrain());
         joyLeft = new Joystick(0);
         
-        forceMecanumButton = new JoystickButton(joyLeft, 1);
-        forceMecanumButton.whileHeld(new ForceMecanumMode());
-        toggleDrivetrainButton = new JoystickButton(joyLeft, 2);
-        toggleDrivetrainButton.whenPressed(new ToggleDrivetrain());
 
 
         // SmartDashboard Buttons
