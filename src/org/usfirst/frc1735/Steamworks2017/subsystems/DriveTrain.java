@@ -70,7 +70,7 @@ public class DriveTrain extends Subsystem {
     	boolean squaredInputs = false; // Do not use decreased sensitivity at low speeds.
     	// Make sure we are in Traction mode:
     	this.setTractionMode();
-    	robotDrive41.arcadeDrive(moveValue, rotateValue, squaredInputs); // WPILIB ASSUMES non-joystick (fwd = +1).  Rotation left is positive, right is negative.
+    	robotDrive41.arcadeDrive(-moveValue, rotateValue, squaredInputs); //Asssume joystick inputs (Y fwd == -1)
     }
     
     public void mecanumDrive(double driveX,double driveY,double rotation) {
@@ -85,26 +85,36 @@ public class DriveTrain extends Subsystem {
     }
 
 	public void octaCanumDriveWithJoysticks(Joystick joyLeft, Joystick joyRight) {
-		// See if we can get the right-side analog joystick from the Xbox360 controller
-		//System.out.println("Right controller Y value is : " + joyRight.
-
-		//System.out.println("LJoyY="+joyLeft.getY()+" LJoyX="+joyLeft.getX() + "RJoyY="+joyRight.getY()+" RJoyX="+joyRight.getX());
 		// Extract the joystick values
-		double joyLeftX  = joyLeft.getX();
-		double joyLeftY  = joyLeft.getY();
-		double joyRightX = joyRight.getX();
-		double joyRightY = joyRight.getY();
+		double joyLeftX, joyLeftY, joyRightX, joyRightY;
 		
+		// If an Xbox controller, try using the two sticks on controller 1 (Right side) instead of using two joysticks
+		if (joyRight.getIsXbox()) {
+			joyLeftX = joyRight.getRawAxis(0);  // Left stick X
+			joyLeftY = joyRight.getRawAxis(1);  // Left stick Y
+			joyRightX = joyRight.getRawAxis(4); // Right stick X
+			joyRightY = joyRight.getRawAxis(5); // Right stick Y
+		}
+		else {
+			joyLeftX  = joyLeft.getX();
+			joyLeftY  = joyLeft.getY();
+			joyRightX = joyRight.getX();
+			joyRightY = joyRight.getY();
+		}
+
+		// Print the raw joystick inputs
+		System.out.println("joyLeftY="+joyLeftY+" joyLeftX="+joyLeftX + " joyRightY="+joyRightY+" joyRightX="+joyRightX);
+
 		// Apply the 'dead zone' guardband to the joystick inputs:
 		// Centered joysticks may not actually read as zero due to spring variances.
 		// Therfore, remove any small values as being "noise".
-		if (joyLeftX < Robot.m_joystickFilter)
+		if (Math.abs(joyLeftX) < Robot.m_joystickFilter)
 			joyLeftX = 0;
-		if (joyLeftY < Robot.m_joystickFilter)
+		if (Math.abs(joyLeftY) < Robot.m_joystickFilter)
 			joyLeftY = 0;
-		if (joyRightX < Robot.m_joystickFilter)
+		if (Math.abs(joyRightX) < Robot.m_joystickFilter)
 			joyRightX = 0;
-		if (joyRightY < Robot.m_joystickFilter)
+		if (Math.abs(joyRightY) < Robot.m_joystickFilter)
 			joyRightY = 0;
 		
 		
@@ -115,7 +125,7 @@ public class DriveTrain extends Subsystem {
 		}
 		else {
 			// Here, we are in arcade mode w/ the traction wheels
-			this.arcadeDrive(-joyRightY, -joyRightX); // fwd/rvs, rotation (CW/right is negative)
+			this.arcadeDrive(-joyRightY, joyRightX); // fwd/rvs, rotation (CW/right is negative)
 		}
 	}
 	
@@ -139,8 +149,8 @@ public class DriveTrain extends Subsystem {
 		this.solenoid.set(false); // release the pneumatics; gravity + "springs" will drop us back onto default mecanum wheels.
     	
     	// Set the correct motor inversion
-		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
-		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
+		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kFrontLeft, true);
+		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kRearLeft, true);
     	
 		// Set the dashboard indicator
 		SmartDashboard.putString("Drivetrain Mode", this.m_isInMecanumMode?"MECANUM":"TRACTION");	
@@ -155,8 +165,8 @@ public class DriveTrain extends Subsystem {
 		this.solenoid.set(true); // engage the pneumatics to force the traction wheels down
     	
     	// Set the correct motor inversion
-		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kFrontRight, false);
-		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kRearRight, false);
+		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kFrontLeft, false);
+		robotDrive41.setInvertedMotor(RobotDrive.MotorType.kRearLeft, false);
     	
 		// Set the dashboard indicator
 		SmartDashboard.putString("Drivetrain Mode", this.m_isInMecanumMode?"MECANUM":"TRACTION");	
