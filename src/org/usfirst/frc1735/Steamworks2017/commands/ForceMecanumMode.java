@@ -66,6 +66,7 @@ public class ForceMecanumMode extends Command {
     protected void end() {
     	// Regardless of how we were terminated, go back to Traction mode (the default desired behavior)
     	Robot.driveTrain.setTractionMode();
+    	Robot.driveTrain.clearCrabExcursion(); // if we had been doing a temporary crab operation from Traction mode, go back to normal traction mode.
     }
 
     // Called when another command which requires one or more of the same

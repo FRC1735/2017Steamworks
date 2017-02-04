@@ -15,6 +15,7 @@ import org.usfirst.frc1735.Steamworks2017.Robot;
 import org.usfirst.frc1735.Steamworks2017.RobotMap;
 import org.usfirst.frc1735.Steamworks2017.commands.*;
 import com.ctre.CANTalon;
+import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
@@ -63,7 +64,7 @@ public class DriveTrain extends Subsystem {
     // Override constructor to initialize variables to defaults
     public DriveTrain() {
     	this.setTractionMode(); // Default to traction mode on startup.
-    	
+    	m_isCrabExcursion = false; // We do not start out in any funny hybrid modes
     }
     
     public void arcadeDrive(double moveValue,double rotateValue) {
@@ -71,6 +72,8 @@ public class DriveTrain extends Subsystem {
     	// Make sure we are in Traction mode:
     	this.setTractionMode();
     	robotDrive41.arcadeDrive(-moveValue, rotateValue, squaredInputs); //Asssume joystick inputs (Y fwd == -1)
+    	printMXPInfo();
+    	
     }
     
     public void mecanumDrive(double driveX,double driveY,double rotation) {
@@ -82,6 +85,7 @@ public class DriveTrain extends Subsystem {
     	// (ie. forward motion is +1 value).
     	// Because the library for Mecanum (only) assumes joystick, we invert here (And the library inverts it back)
 		robotDrive41.mecanumDrive_Cartesian(driveX, -driveY, rotation, gyroAngle ); // WPILIB ASSUMES Joystick input (Y forward == -1)
+    	printMXPInfo();
     }
 
 	public void octaCanumDriveWithJoysticks(Joystick joyLeft, Joystick joyRight) {
@@ -103,7 +107,7 @@ public class DriveTrain extends Subsystem {
 		}
 
 		// Print the raw joystick inputs
-		System.out.println("joyLeftY="+joyLeftY+" joyLeftX="+joyLeftX + " joyRightY="+joyRightY+" joyRightX="+joyRightX);
+		//System.out.println("joyLeftY="+joyLeftY+" joyLeftX="+joyLeftX + " joyRightY="+joyRightY+" joyRightX="+joyRightX);
 
 		// Apply the 'dead zone' guardband to the joystick inputs:
 		// Centered joysticks may not actually read as zero due to spring variances.
@@ -119,14 +123,80 @@ public class DriveTrain extends Subsystem {
 		
 		
 		// Find out which operating mode is requested
-		if (this.isInMecanumMode()) {
+		if (false) { // original, simple mode
+		if (!this.isInMecanumMode() && (joyLeftX == 0)) {
+			// Here, we are in arcade mode, and are not using the crab joystick.   Use the traction wheels.
+			this.arcadeDrive(-joyRightY, joyRightX); // fwd/rvs, rotation (CW/right is negative)
+		}
+		else {
 			// Drive with the mecanum wheels...
 			this.mecanumDrive(joyLeftX, -joyRightY, joyRightX); // X motion (crab), Y motion (fwd/rvs), rotation
 		}
-		else {
-			// Here, we are in arcade mode w/ the traction wheels
-			this.arcadeDrive(-joyRightY, joyRightX); // fwd/rvs, rotation (CW/right is negative)
 		}
+		else {
+			// Complicated state machine.  When using the left joystick to crab, treat it as a temporary excursion into mecanum.
+			// Must return to traction when stick is released, but this requires knowing whether we were in mecanum or traction before the crab operation.
+			// (Call this isCrabExcursion; if true then we are in this funny state.
+			// This operation is basically a 5-input state machine.
+			// We need the force_mecanum, toggle, crab, mecanum, and joyleft inputs
+			// next-state indicators for the four possible transitions (not encoded)
+			boolean normal    = false;
+			boolean enterCrab = false;
+			boolean exitCrab  = false;
+			boolean stayCrab  = false;
+			
+			// simplified input variable
+			boolean isCrabbing = (joyLeftX != 0);
+			
+			// Transition table (illegal states and don't-cares are not listed, of course)
+			if      (!m_isCrabExcursion && !isInMecanumMode() && !isCrabbing) //000
+				normal = true;
+			else if (!m_isCrabExcursion && !isInMecanumMode() &&  isCrabbing) //001
+				enterCrab = true;
+			else if (!m_isCrabExcursion &&  isInMecanumMode()               ) //010 or 011
+				normal = true;			
+			else if ( m_isCrabExcursion &&  isInMecanumMode() && !isCrabbing) //110
+				exitCrab = true;
+			else if ( m_isCrabExcursion &&  isInMecanumMode() &&  isCrabbing) //111
+				stayCrab = true;
+			else //when all else fails, behave normally as if there is no crab excursion mode!
+				normal = true;  
+			
+			// There are other factors too-- do these just to ensure a sane state
+			// if we decide to toggle while in a crab excursion, clear the crab bit. (done in this.toggleDriveTrain())
+			// if we decide to force mecanum while in a crab excursion, clear the crab bit. (Done in the ForceMecanum command)
+			
+			// Now that we know the next state, execute on it:
+			if (normal) {
+				if (!this.isInMecanumMode() && (joyLeftX == 0)) {
+					// Here, we are in arcade mode, and are not using the crab joystick.   Use the traction wheels.
+					this.arcadeDrive(-joyRightY, joyRightX); // fwd/rvs, rotation (CW/right is negative)
+				}
+				else {
+					// Drive with the mecanum wheels...
+					this.mecanumDrive(joyLeftX, -joyRightY, joyRightX); // X motion (crab), Y motion (fwd/rvs), rotation
+				}
+			}
+			else if (enterCrab) {
+				// set the crab bit, and call the mecanum drive
+				m_isCrabExcursion = true;
+				this.mecanumDrive(joyLeftX, -joyRightY, joyRightX); // X motion (crab), Y motion (fwd/rvs), rotation
+			}
+			else if (exitCrab) {
+				// Clear the crab bit, and call the traction drive
+				m_isCrabExcursion = false;
+				this.arcadeDrive(-joyRightY, joyRightX); // fwd/rvs, rotation (CW/right is negative)				
+			}
+			else if (stayCrab) {
+				// continue to drive in mecanum mode
+				this.mecanumDrive(joyLeftX, -joyRightY, joyRightX); // X motion (crab), Y motion (fwd/rvs), rotation
+			}
+			SmartDashboard.putBoolean("CrabExcursion", m_isCrabExcursion);
+
+		}
+
+			
+			
 	}
 	
     // Function to STOP the drivetrain:
@@ -178,9 +248,43 @@ public class DriveTrain extends Subsystem {
 			Robot.driveTrain.setTractionMode();
 		else // Must be in traction mode, so...
 			Robot.driveTrain.setMecanumMode();
+		// Clear any temporary crab excursion state
+		clearCrabExcursion();
+    }
+    
+    // For Gyro information shared by multiple subsystems
+    // (Perhaps move to separate subsystem?)
+    public void printMXPInfo() {
+    	AHRS ahrs = Robot.ahrs; // this creates a local variable whose scope overrides the one in Robot; makes cut and paste from MXP examples easier
+        /* These functions are compatible w/the WPI Gyro Class, providing a simple  */
+        /* path for upgrading from the Kit-of-Parts gyro to the navx MXP            */
+        
+        SmartDashboard.putNumber(   "IMU_TotalYaw",         ahrs.getAngle()); //cumulative over time
+        SmartDashboard.putNumber(   "IMU_YawRateDPS",       ahrs.getRate());
+ 
+        /* Display 9-axis Heading (requires magnetometer calibration to be useful)  */
+        SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
+
+        /* Display estimates of velocity/displacement.  Note that these values are  */
+        /* not expected to be accurate enough for estimating robot position on a    */
+        /* FIRST FRC Robotics Field, due to accelerometer noise and the compounding */
+        /* of these errors due to single (velocity) integration and especially      */
+        /* double (displacement) integration.                                       */
+        
+        SmartDashboard.putNumber(   "Velocity_X",           ahrs.getVelocityX());
+        SmartDashboard.putNumber(   "Velocity_Y",           ahrs.getVelocityY());
+        SmartDashboard.putNumber(   "Displacement_X",       ahrs.getDisplacementX());
+        SmartDashboard.putNumber(   "Displacement_Y",       ahrs.getDisplacementY());
+
+    }
+    
+    // Used by external classes to cancel temporary excursions into crab mode (eg. forceMecanum and Toggle)
+    public void clearCrabExcursion() {
+    	m_isCrabExcursion = false;
     }
 
     // Member Variables
-    boolean m_isInMecanumMode;
+    boolean m_isInMecanumMode; // True = mecanum; false = traction
+    boolean m_isCrabExcursion; // Keep track of whether we are temporarily crabbing from traction mode
 }
 
