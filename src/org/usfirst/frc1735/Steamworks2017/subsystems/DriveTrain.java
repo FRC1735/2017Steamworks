@@ -67,6 +67,18 @@ public class DriveTrain extends Subsystem {
     	m_isCrabExcursion = false; // We do not start out in any funny hybrid modes
     }
     
+    public enum DrivetrainMode {
+        kMecanum(0), kTraction(1), kCrabExcursion(2);
+
+    	@SuppressWarnings("MemberName")
+    	public final int value;
+
+
+    	private DrivetrainMode(int value) {
+    		this.value = value;
+      }
+    }
+    
     public void arcadeDrive(double moveValue,double rotateValue) {
     	boolean squaredInputs = false; // Do not use decreased sensitivity at low speeds.
     	// Make sure we are in Traction mode:
@@ -168,7 +180,7 @@ public class DriveTrain extends Subsystem {
 			
 			// Now that we know the next state, execute on it:
 			if (normal) {
-				if (!this.isInMecanumMode() && (joyLeftX == 0)) {
+				if (!this.isInMecanumMode()) {
 					// Here, we are in arcade mode, and are not using the crab joystick.   Use the traction wheels.
 					this.arcadeDrive(-joyRightY, joyRightX); // fwd/rvs, rotation (CW/right is negative)
 				}
@@ -282,6 +294,7 @@ public class DriveTrain extends Subsystem {
     public void clearCrabExcursion() {
     	m_isCrabExcursion = false;
     }
+        
 
     // Member Variables
     boolean m_isInMecanumMode; // True = mecanum; false = traction
