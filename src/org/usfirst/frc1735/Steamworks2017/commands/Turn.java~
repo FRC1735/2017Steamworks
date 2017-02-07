@@ -55,13 +55,11 @@ public class Turn extends Command {
     	
     	System.out.println("Issuing turn in mode " + m_mode + " and speed " + m_speed + "for " + m_angle + " degrees.");
 
-    	// Get the initial gyro angle, converted to a 0-360 (modulo 360) value
-    	// (getAngle is cumulative, so if you have turned 10 times to the left, the value is -3600)
-    	m_initialGyroAngle = Robot.ahrs.getAngle()%360;
+    	m_initialGyroAngle = Robot.ahrs.getAngle();
     	System.out.println("modulo gyro value at init is" + m_initialGyroAngle);
     	
-    	// Calculate the target gyro value (mod360), based on the desired rotation angle
-    	m_targetGyroAngle = (m_initialGyroAngle + m_angle)%360;
+    	// Calculate the target gyro value, based on the desired rotation angle
+    	m_targetGyroAngle = (m_initialGyroAngle + m_angle);
     	System.out.println("based on desired rotaton of " + m_angle + ", modulo target angle is " + m_targetGyroAngle);
     }
 
@@ -80,7 +78,7 @@ public class Turn extends Command {
     // Make this return true when this Command no longer needs to run execute()
     protected boolean isFinished() {
         boolean done;
-        double currentAngle = Robot.ahrs.getAngle()%360; // convert to 0-360 because total angle is cumulative
+        double currentAngle = Robot.ahrs.getAngle();
     	System.out.println("Current modulo gyro value is" + currentAngle);
     	done = (((m_angle <= 0) && (currentAngle <= m_targetGyroAngle)) || // we are turning left  and just got equal/smaller than our target
     			((m_angle >= 0) && (currentAngle >= m_targetGyroAngle)));  // we are turning right and just got equal/bigger  than our target

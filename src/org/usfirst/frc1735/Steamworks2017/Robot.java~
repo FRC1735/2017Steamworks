@@ -92,6 +92,9 @@ public class Robot extends IterativeRobot {
 	        DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 	    }
     	ahrs.zeroYaw(); // Init the gyro to zero degrees
+    	
+    	// Initialize drivetrain code the depends on the presence of a gyro:
+    	Robot.driveTrain.initDrivetrain();
 
     }
 
