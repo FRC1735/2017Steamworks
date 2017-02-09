@@ -12,6 +12,7 @@
 package org.usfirst.frc1735.Steamworks2017.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc1735.Steamworks2017.Robot;
+import org.usfirst.frc1735.Steamworks2017.subsystems.DriveTrain;
 
 /**
  *
@@ -64,10 +65,10 @@ public class PIDDrive extends Command {
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
        	// Use mode bit to determine which driveline mode to use to accomplish the PID output reaction
-    	if (m_mode == 0) { // mecanum; use enum later
+    	if (DriveTrain.DrivetrainMode.fromInteger(m_mode) == DriveTrain.DrivetrainMode.kMecanum) {
     		Robot.driveTrain.mecanumDrive(0, m_speed, Robot.driveTrain.getPIDRotationRate()); // x,y,rot
     	}
-    	else if (m_mode == 1) { // Traction; use enum later
+    	else if (DriveTrain.DrivetrainMode.fromInteger(m_mode) == DriveTrain.DrivetrainMode.kTraction) {
     		Robot.driveTrain.arcadeDrive(m_speed, Robot.driveTrain.getPIDRotationRate());// move, rot
     	}
     }
