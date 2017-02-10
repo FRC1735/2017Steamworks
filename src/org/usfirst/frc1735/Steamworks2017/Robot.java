@@ -26,7 +26,7 @@ import org.usfirst.frc1735.Steamworks2017.subsystems.*;
  * directory.
  */
 
-//FRC1735-test comment
+// FRC1735-test comment
 public class Robot extends IterativeRobot {
 
     Command autonomousCommand;
