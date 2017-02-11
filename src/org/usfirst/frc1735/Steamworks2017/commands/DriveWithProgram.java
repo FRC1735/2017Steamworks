@@ -140,26 +140,38 @@ public class DriveWithProgram extends Command {
     	double BLCurrentDistance = RobotMap.driveTrainBLMotor.getEncPosition();
     	double BRCurrentDistance = RobotMap.driveTrainBRMotor.getEncPosition();
 
-    	// Determine amount of travel
-    	double FLTravel = Math.abs(FLCurrentDistance - m_FLStartDistance);
-    	double FRTravel = Math.abs(FRCurrentDistance - m_FRStartDistance);
-    	double BLTravel = Math.abs(BLCurrentDistance - m_BLStartDistance);
-    	double BRTravel = Math.abs(BRCurrentDistance - m_BRStartDistance);
-    	
+    	// Determine amount of travel in actual distance units
+    	double FLDriveTravel = Math.abs(FLCurrentDistance - m_FLStartDistance) * Robot.driveTrain.m_distancePerTick;
+    	double FRDriveTravel = Math.abs(FRCurrentDistance - m_FRStartDistance) * Robot.driveTrain.m_distancePerTick;
+    	double BLDriveTravel = Math.abs(BLCurrentDistance - m_BLStartDistance) * Robot.driveTrain.m_distancePerTick;
+    	double BRDriveTravel = Math.abs(BRCurrentDistance - m_BRStartDistance) * Robot.driveTrain.m_distancePerTick;
+    	    	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
-    	//@FIXME:  We may need to change this to use only one encoder if we are turning, as some wheels might go slow or even backwards
-    	boolean driveDistReached = ((FLTravel >= m_driveDist) || // Note 2016 used > and not >=
-    								(FRTravel >= m_driveDist) ||
-    								(BLTravel >= m_driveDist) ||
-    								(BRTravel >= m_driveDist));
+    	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
+    	// but if one wheel slips on starup, it will reach the distance limit too early, and we won't have gone far enough
+    	// Compromise:  Assume no more than one wheel slips, and make sure at least TWO got to the distance limit.
+    	int FLDriveReached = (FLDriveTravel >= m_driveDist)?1:0; // Convert bool to int
+    	int FRDriveReached = (FRDriveTravel >= m_driveDist)?1:0;
+    	int BLDriveReached = (BLDriveTravel >= m_driveDist)?1:0;
+    	int BRDriveReached = (BRDriveTravel >= m_driveDist)?1:0;
+    	
+    	boolean driveDistReached = (FLDriveReached + FRDriveReached + BLDriveReached + BRDriveReached) >= 2;
+    	
     	// From travel, determine if we reached the crab distance limit
     	// This is tougher because wheels spin in opposite directions!
     	// Therefore the distance_per_revolution may be different.
-    	//@FIXME:  empirically determine what the factors are for crab vs forward
-    	boolean crabDistReached = (	(FLTravel > m_crabDist) ||
-    								(FRTravel >= m_crabDist) ||
-    								(BLTravel >= m_crabDist) ||
-    								(BRTravel >= m_crabDist));
+    	// We SWAG that the crab distance will be sqrt(2)/2 compared to forward distance per rotation.
+    	double FLCrabTravel = FLDriveTravel * Math.sqrt(2)/2;
+    	double FRCrabTravel = FRDriveTravel * Math.sqrt(2)/2;
+    	double BLCrabTravel = BLDriveTravel * Math.sqrt(2)/2;
+    	double BRCrabTravel = BRDriveTravel * Math.sqrt(2)/2;
+
+    	int FLCrabReached = (FLCrabTravel >= m_crabDist)?1:0; // Convert bool to int
+    	int FRCrabReached = (FRCrabTravel >= m_crabDist)?1:0;
+    	int BLCrabReached = (BLCrabTravel >= m_crabDist)?1:0;
+    	int BRCrabReached = (BRCrabTravel >= m_crabDist)?1:0;
+    	
+    	boolean crabDistReached = (FLCrabReached + FRCrabReached + BLCrabReached + BRCrabReached) >= 2;
     	
     	// IF we specified no angle, then the PID was trying to keep us on a constant heading an onTarget() is still valid to look at.
     	boolean angleReached = Robot.driveTrain.drivelineController.onTarget();

@@ -349,6 +349,11 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     static final double kD = 0.00;
     static final double kF = 0.00;
     static final double kToleranceDegrees = 2.0f; // Stop if we are within this many degrees of the setpoint.
+    
+    // wheel distance per encoder tick is empirically determined
+    // This assumes forward rotation of the wheel.
+    // We are SWAGging that crabbing will be sqrt2/2 factor.
+    public static final double m_distancePerTick = 4*3.1415927/4096; // Make a guess for now.  circuference of 4" wheel divided by 4096 ticks/rev
 
 
 }
