@@ -97,10 +97,22 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	@SuppressWarnings("MemberName")
     	public final int value;
 
-
     	private DrivetrainMode(int value) {
     		this.value = value;
       }
+    	
+    	// Provide a pseudo-cast operation so ints can be compared to enums
+    	public static DrivetrainMode fromInteger(int mode) {
+    		switch (mode) {
+    		case 0:
+    			return kMecanum;
+    		case 1:
+    			return kTraction;
+    		case 2:
+    			return kCrabExcursion;
+    		}
+    		return null;
+    	}
     }
     
     public void arcadeDrive(double moveValue,double rotateValue) {
