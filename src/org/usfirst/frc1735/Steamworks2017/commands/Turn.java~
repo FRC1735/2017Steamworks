@@ -12,6 +12,7 @@
 package org.usfirst.frc1735.Steamworks2017.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc1735.Steamworks2017.Robot;
+import org.usfirst.frc1735.Steamworks2017.subsystems.DriveTrain;
 
 /**
  *
@@ -67,10 +68,10 @@ public class Turn extends Command {
     protected void execute() {
     	// Implement as non-PID for now
     	// execute a turn based on the input mode and requested rotation.
-    	if (m_mode == 0) { // mecanum; use enum later
+    	if (DriveTrain.DrivetrainMode.fromInteger(m_mode) == DriveTrain.DrivetrainMode.kMecanum) {
     		Robot.driveTrain.mecanumDrive(0, 0, m_speed); // x,y,rot
     	}
-    	else if (m_mode == 1) { // Traction; use enum later
+    	else if (DriveTrain.DrivetrainMode.fromInteger(m_mode) == DriveTrain.DrivetrainMode.kTraction) {
     		Robot.driveTrain.arcadeDrive(0, m_speed);// move, rot
     	}
     }
