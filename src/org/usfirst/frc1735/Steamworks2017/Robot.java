@@ -48,7 +48,7 @@ public class Robot extends IterativeRobot {
     // Additional Member variables
 
     // High-pass filter.  Any joystick absolute value less than this should be clamped to zero.
-    public static double m_joystickFilter = 0.15;
+    public static double m_joystickFilter = 0.2;
 
     // NAVX-MXP interface
     public static AHRS ahrs;
