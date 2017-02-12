@@ -81,6 +81,7 @@ public class PIDDrive extends Command {
     // Called once after isFinished returns true
     protected void end() {
     	Robot.driveTrain.drivelineController.disable();
+    	Robot.driveTrain.stop();
     	
     }
 

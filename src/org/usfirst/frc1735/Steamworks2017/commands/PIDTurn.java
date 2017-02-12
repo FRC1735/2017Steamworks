@@ -87,6 +87,7 @@ public class PIDTurn extends Command {
     // Called once after isFinished returns true
     protected void end() {
     	Robot.driveTrain.drivelineController.disable();
+    	Robot.driveTrain.stop(); // Probably redundant since only the PID was providing stimulus, but better to be explicit.
     }
 
     // Called when another command which requires one or more of the same

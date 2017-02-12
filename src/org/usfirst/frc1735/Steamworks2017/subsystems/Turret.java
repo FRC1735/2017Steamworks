@@ -13,8 +13,10 @@ package org.usfirst.frc1735.Steamworks2017.subsystems;
 
 import org.usfirst.frc1735.Steamworks2017.RobotMap;
 import org.usfirst.frc1735.Steamworks2017.commands.*;
+
+import com.ctre.CANTalon;
+
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.CANTalon;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
 
