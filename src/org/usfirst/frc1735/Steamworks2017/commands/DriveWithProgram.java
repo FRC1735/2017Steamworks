@@ -141,10 +141,10 @@ public class DriveWithProgram extends Command {
     	double BRCurrentDistance = RobotMap.driveTrainBRMotor.getEncPosition();
 
     	// Determine amount of travel in actual distance units
-    	double FLDriveTravel = Math.abs(FLCurrentDistance - m_FLStartDistance) * Robot.driveTrain.m_distancePerTick;
-    	double FRDriveTravel = Math.abs(FRCurrentDistance - m_FRStartDistance) * Robot.driveTrain.m_distancePerTick;
-    	double BLDriveTravel = Math.abs(BLCurrentDistance - m_BLStartDistance) * Robot.driveTrain.m_distancePerTick;
-    	double BRDriveTravel = Math.abs(BRCurrentDistance - m_BRStartDistance) * Robot.driveTrain.m_distancePerTick;
+    	double FLDriveTravel = Math.abs(FLCurrentDistance - m_FLStartDistance) * DriveTrain.m_distancePerTick;
+    	double FRDriveTravel = Math.abs(FRCurrentDistance - m_FRStartDistance) * DriveTrain.m_distancePerTick;
+    	double BLDriveTravel = Math.abs(BLCurrentDistance - m_BLStartDistance) * DriveTrain.m_distancePerTick;
+    	double BRDriveTravel = Math.abs(BRCurrentDistance - m_BRStartDistance) * DriveTrain.m_distancePerTick;
     	    	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
     	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
