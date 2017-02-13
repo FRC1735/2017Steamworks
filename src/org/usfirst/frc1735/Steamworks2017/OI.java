@@ -77,6 +77,7 @@ public class OI {
 
 
         // SmartDashboard Buttons
+        SmartDashboard.putData("ActivateTurret", new ActivateTurret());
         SmartDashboard.putData("ResetGyro", new ResetGyro());
         SmartDashboard.putData("Autonomous Command", new AutonomousCommand());
         SmartDashboard.putData("ToggleDrivetrain", new ToggleDrivetrain());

@@ -100,6 +100,9 @@ public class Robot extends IterativeRobot {
     	
     	// Initialize drivetrain code the depends on the presence of a gyro:
     	Robot.driveTrain.initDrivetrain();
+    	
+    	// Initialize the Talon PID; wanted this after constructors.
+    	Robot.turret.turretInit();
 
     }
 
