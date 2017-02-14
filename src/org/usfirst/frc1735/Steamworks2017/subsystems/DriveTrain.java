@@ -15,6 +15,8 @@ import org.usfirst.frc1735.Steamworks2017.Robot;
 import org.usfirst.frc1735.Steamworks2017.RobotMap;
 import org.usfirst.frc1735.Steamworks2017.commands.*;
 import com.ctre.CANTalon;
+import com.ctre.CANTalon.FeedbackDevice;
+import com.ctre.CANTalon.TalonControlMode;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Compressor;
@@ -115,6 +117,46 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	}
     }
     
+    public void drivetrainInit() {
+    	// Choose the sensor and sensor dirction
+    	fLMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	fLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
+    	fRMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	fRMotor.reverseSensor(false); //Assume no inversion at this time.
+    	bLMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	bLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
+    	bRMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	bRMotor.reverseSensor(false); //Assume no inversion at this time.
+
+    	// We might choose to use the controller PID for doing clean positional driving (e.g., drive 36 inches).  here's some initial setup thoughts
+    	if (false) {
+	    	// No configEncoderCodesPerRev is needed for CTRE Mag Encoder.
+	    	fLMotor.configNominalOutputVoltage(+0f,  -0f);
+	    	fLMotor.configPeakOutputVoltage(+12f,  -12f);
+	    	
+	    	// @FIXME:  We might need to add a voltage ramp rate if we accellerate too quickly
+	    	//fLMotor.setVoltageRampRate(something)
+	    	
+	    	/* set the allowable closed-loop error,
+	         * Closed-Loop output will be neutral within this range.
+	         * See Table in Section 17.2.1 for native units per rotation. 
+	         */
+	    	// Don't think we need this
+	        //fLMotor.setAllowableClosedLoopErr(144);// in raw units of 4xCPR (4x fidelity of codes per rev)
+	        /* set closed loop gains in slot0 */
+	        fLMotor.setProfile(0);
+	        fLMotor.setF(0);
+	        fLMotor.setP(0.1);
+	        fLMotor.setI(0.0); 
+	        fLMotor.setD(0.0);
+	         
+	        // Set the mode to be position-based
+	        fLMotor.changeControlMode(TalonControlMode.Position);
+	        // Must set an initial setpoint as well.  setpoint appears to be number of rotations desired (positive or negative)
+	        fLMotor.set(0);
+    	}
+    }
+
     public void arcadeDrive(double moveValue,double rotateValue) {
     	boolean squaredInputs = false; // Do not use decreased sensitivity at low speeds.
     	// Make sure we are in Traction mode:
@@ -350,11 +392,9 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     static final double kF = 0.00;
     static final double kToleranceDegrees = 2.0f; // Stop if we are within this many degrees of the setpoint.
     
-    // wheel distance per encoder tick is empirically determined
-    // This assumes forward rotation of the wheel.
-    // We are SWAGging that crabbing will be sqrt2/2 factor.
-    public static final double m_distancePerTick = 4*3.1415927/4096; // Make a guess for now.  circuference of 4" wheel divided by 4096 ticks/rev
-
+    // wheel distance per revolution should be circumference, but should empirically verified.
+    // We are SWAGging that crabbing will be sqrt2/2 factor off this.
+    public static final double m_inchesPerRevolution = 4*3.1415927; // for starters, use circuference of 4" wheel
 
 }
 

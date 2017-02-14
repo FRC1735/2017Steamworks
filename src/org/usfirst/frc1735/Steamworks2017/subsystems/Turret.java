@@ -80,6 +80,7 @@ public class Turret extends Subsystem {
         
         // Because we have limited motion in either direction, we may need to specify soft limits on the absolute encoder value.
         // The actual limit values will probably vary due to assembly (far left edge might not be exactly zero>)
+        // Units are in rotations
         turretTurner.setForwardSoftLimit(m_forwardSoftLimit);
         turretTurner.enableForwardSoftLimit(true);
         turretTurner.setReverseSoftLimit(m_reverseSoftLimit);
@@ -257,7 +258,7 @@ public class Turret extends Subsystem {
     	return distance;
     }
 
-    // Accessors for turret Commands like TurretWithJoystick
+    // Accessors for turret Commands like TurretWithJoystick.  Units are in rotations
     public double getLeftLimit() { return m_reverseSoftLimit; }
     public double getRightLimit() { return m_forwardSoftLimit; }
 
@@ -265,8 +266,8 @@ public class Turret extends Subsystem {
     // Member Variables
     //----------------------------------
     private boolean m_visionEnabled = false; // Is the turret active?
-    private double m_reverseSoftLimit = 0.0;
-    private double m_forwardSoftLimit = 85.3; // Assumes 1024 ticks/rev, 30' of motion, and left edge is at zero.
+    private double m_reverseSoftLimit = 0.0; // Soft limit in rotations
+    private double m_forwardSoftLimit = 30/360; // Assume 30 degree max, with left side at zero.
 	NetworkTable m_boilerTable;
 	public static final double m_xRes = 320; // this is the maximum resolution in pixels for the x (horizontal) direction-- determined by how the vision pipeline is implemented.
 	// This is the offset (in PIXELS) that we need to compensate between the camera center and the robot shooting centered.

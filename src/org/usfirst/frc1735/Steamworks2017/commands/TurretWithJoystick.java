@@ -49,10 +49,10 @@ public class TurretWithJoystick extends Command {
 			rawInput = 0;
 		//Scale to the turret extents.  USes an absolute encoder, so there is a fixed value for left and right edges of motion.
 		double turretTarget = ((rawInput +1)/2); // Scale joystick's range of -1:1 to be 0:1
-		turretTarget = (turretTarget * (Robot.turret.getRightLimit() - Robot.turret.getLeftLimit())); // scale to the legal encoder range
+		turretTarget = (turretTarget * (Robot.turret.getRightLimit() - Robot.turret.getLeftLimit())); // scale to the legal rotation range
 		turretTarget = turretTarget + Robot.turret.getLeftLimit(); // and shift to match left limit in case it's nonzero.
     	
-		RobotMap.turretTurretTurner.set(turretTarget);
+		RobotMap.turretTurretTurner.set(turretTarget); // target is in terms of an absolute rotation between left and right limits
     }
 
     // Make this return true when this Command no longer needs to run execute()

@@ -33,24 +33,15 @@ public class DriveWithProgram extends Command {
 	private double m_crabDist;
 	
 	// Member variables set by initialize()
-	private double m_FLStartDistance; // Front Left encoder starting value
-	private double m_FRStartDistance; // Front Right
-	private double m_BLStartDistance; // Back Left
-	private double m_BRStartDistance; // Back Right
+	private double m_FLStartRotation; // Front Left encoder starting value in rotation units
+	private double m_FRStartRotation; // Front Right
+	private double m_BLStartRotation; // Back Left
+	private double m_BRStartRotation; // Back Right
 	private double m_initialGyroAngle; // Starting Gyro value
 	private double m_targetGyroAngle;  // Calculated target gyro angle
 
-	// Default constructor (sometimes this is needed by the compiler)
-	public DriveWithProgram() {
-		this	(DriveTrain.DrivetrainMode.kMecanum,
-				1,   // Timelimit 1 sec
-				0,0, // Drive mag/dist
-				0,0, // Crabmag/dist
-				0);  // Turn angle (PID determines magnitude)
-			
-	}
-	
 	// The full constructor with all the trimmings...
+	// Units:  Time in seconds, distance in inches, angle in degrees.
     public DriveWithProgram(DriveTrain.DrivetrainMode mode,
     						double timeLimit,
     						double driveMagDir, double driveDist,
@@ -94,11 +85,11 @@ public class DriveWithProgram extends Command {
     		m_crabDist = -m_crabDist;
     	}
     	
-    	// Get the initial values for all gyros
-    	m_FLStartDistance = RobotMap.driveTrainFLMotor.getEncPosition();
-    	m_FRStartDistance = RobotMap.driveTrainFRMotor.getEncPosition();
-    	m_BLStartDistance = RobotMap.driveTrainBLMotor.getEncPosition();
-    	m_BRStartDistance = RobotMap.driveTrainBRMotor.getEncPosition();
+    	// Get the initial values for all driveline encoders.  This value is in rotations.
+    	m_FLStartRotation = RobotMap.driveTrainFLMotor.get();
+    	m_FRStartRotation = RobotMap.driveTrainFRMotor.get();
+    	m_BLStartRotation = RobotMap.driveTrainBLMotor.get();
+    	m_BRStartRotation = RobotMap.driveTrainBRMotor.get();
     	
     	// Get the initial Gyro heading
     	m_initialGyroAngle = Robot.ahrs.getAngle();
@@ -134,17 +125,17 @@ public class DriveWithProgram extends Command {
         // Because we have multiple degrees of freedom that may be requested, we don't finish until ALL of them are achieved
     	// 1) Get state of drive limit
     	//    There are four encoders.  Claim victory if any of them reached the limit (Courtesy of the Department of Redundancy Department)
-    	//@FIXME:  How do we code in the distance_per_tick for this encoder type?
-    	double FLCurrentDistance = RobotMap.driveTrainFLMotor.getEncPosition();
-    	double FRCurrentDistance = RobotMap.driveTrainFRMotor.getEncPosition();
-    	double BLCurrentDistance = RobotMap.driveTrainBLMotor.getEncPosition();
-    	double BRCurrentDistance = RobotMap.driveTrainBRMotor.getEncPosition();
+    	//encoder value is returned in units of rotations.
+    	double FLCurrentRotation = RobotMap.driveTrainFLMotor.get();
+    	double FRCurrentRotation = RobotMap.driveTrainFRMotor.get();
+    	double BLCurrentRotation = RobotMap.driveTrainBLMotor.get();
+    	double BRCurrentRotation = RobotMap.driveTrainBRMotor.get();
 
     	// Determine amount of travel in actual distance units
-    	double FLDriveTravel = Math.abs(FLCurrentDistance - m_FLStartDistance) * DriveTrain.m_distancePerTick;
-    	double FRDriveTravel = Math.abs(FRCurrentDistance - m_FRStartDistance) * DriveTrain.m_distancePerTick;
-    	double BLDriveTravel = Math.abs(BLCurrentDistance - m_BLStartDistance) * DriveTrain.m_distancePerTick;
-    	double BRDriveTravel = Math.abs(BRCurrentDistance - m_BRStartDistance) * DriveTrain.m_distancePerTick;
+    	double FLDriveTravel = Math.abs(FLCurrentRotation - m_FLStartRotation) * DriveTrain.m_inchesPerRevolution;
+    	double FRDriveTravel = Math.abs(FRCurrentRotation - m_FRStartRotation) * DriveTrain.m_inchesPerRevolution;
+    	double BLDriveTravel = Math.abs(BLCurrentRotation - m_BLStartRotation) * DriveTrain.m_inchesPerRevolution;
+    	double BRDriveTravel = Math.abs(BRCurrentRotation - m_BRStartRotation) * DriveTrain.m_inchesPerRevolution;
     	    	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
     	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
@@ -166,6 +157,7 @@ public class DriveWithProgram extends Command {
     	double BLCrabTravel = BLDriveTravel * Math.sqrt(2)/2;
     	double BRCrabTravel = BRDriveTravel * Math.sqrt(2)/2;
 
+    	//@FIXME:  We need to work out signs for front and rear, or forward motion will look like crab motion here.
     	int FLCrabReached = (FLCrabTravel >= m_crabDist)?1:0; // Convert bool to int
     	int FRCrabReached = (FRCrabTravel >= m_crabDist)?1:0;
     	int BLCrabReached = (BLCrabTravel >= m_crabDist)?1:0;
