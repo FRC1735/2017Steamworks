@@ -107,44 +107,44 @@ public class Turret extends Subsystem {
     // So, we need to be careful not to send stale camera data to the PID if it's already close to the actual goal based on the last "good" snapshot.
     // Not sure how to limit this unless we only get snapshots when we think we have gotten onTarget from the last snapshot
     public void operate() {
-    	double targetAngle = turretTurner.getSetpoint(); // What's our current setpoint?  Default to that for now.
-    	
+    	double targetAngle;
+    	double currentSetpoint = turretTurner.getSetpoint();
     	// Are we actively targeting? And have we reached the last snapshot's target position?  if so, calculate a new target
-    	if (this.isActive() && this.onTarget()) {
+    	if (this.isVisionEnabled() && this.onTarget()) {
         	// Query the camera info to get our angle of error from the target.
         	// If no target is currently visible, returns an error of zero (this prevents us from spinning around aimlessly if we lose the target)
         	// @FIXME:  Eventually, some kind of algorithm to help with lost vision target would be good-- do we actually search for it?
         	double errorAngle = getErrorAngle(); // Need to be careful about the sign.  Assume that lower numbers are to the left (relative to shooter).
-        	double currentAngle = turretTurner.getEncPosition(); // Grab current (absolute) position
+        	double currentAngle = turretTurner.get()*360; // go relative to our current position (which might not QUITE be the setpoint)
         	targetAngle = currentAngle + errorAngle; // if error is negative we will turn to the left.
     	}
     	else {
     		// either we are not targeting, or we are in motion right now; keep the current setpoint that we defaulted to at the top of the function
-    	}
+        	targetAngle = currentSetpoint*360; // convert setpoint's "rotations" into "Degrees"
+		}
     	
     	// Make the targetAngle the new setpoint (Must do this periodically to avoid Motor safety timeouts!)
-    	// Side note:  For testing purposes, we could use operator joystick as a setpoint, by scaling joyX value of (-1 to +1) to be the limits of the turret... hmmm.
-    	turretTurner.set(targetAngle);
+    	// However, the PID takes ROTATIONS as the unit of measurement.
+    	// So, if one rotation is 360 degrees, then we simply divide the angle by 360.
+    	// @FIXME: Again, this assumes the left edge is at zero; may need a correction factor throughout this function...
+    	turretTurner.set(targetAngle/360);
     }
     
     // Returns true if we are actively using the turret (enables vision snapshots and the HW PID controller)
-    public boolean isActive() {
-    	return(turretTurner.isControlEnabled());   	
+    public boolean isVisionEnabled() {
+    	return m_visionEnabled;
     }
     
     // Set the mode (active = true)
-    public void setActive(boolean isActive) {
-    	if (isActive) {
-    		turretTurner.enableControl();
-    	}
-    	else {
-    		turretTurner.disableControl();
-    	}
+    public void setVisionEnable(boolean isEnabled) {
+    	m_visionEnabled = isEnabled;
     }
-    
+        
     // Return if we think the PID is at its target setpoint right now
     public boolean onTarget() {
-    	if (Math.abs(turretTurner.getClosedLoopError()) <= 5.6) {// Arbitrary guess because I don't know the units.  in encoder ticks, 5.6 is about 2 degrees...
+    	// Error is reported in (Fractional) rotations with one rotation being 1024 units.
+    	// Therefore, if we want error of 1%, we want the reported error to be <= 10.24
+    	if (Math.abs(turretTurner.getClosedLoopError()) <= 10.24) {
     		return true;
     	}
     	else {
@@ -257,10 +257,14 @@ public class Turret extends Subsystem {
     	return distance;
     }
 
+    // Accessors for turret Commands like TurretWithJoystick
+    public double getLeftLimit() { return m_reverseSoftLimit; }
+    public double getRightLimit() { return m_forwardSoftLimit; }
+
     //----------------------------------
     // Member Variables
     //----------------------------------
-    private boolean m_isActive = false; // Is the turret active?
+    private boolean m_visionEnabled = false; // Is the turret active?
     private double m_reverseSoftLimit = 0.0;
     private double m_forwardSoftLimit = 85.3; // Assumes 1024 ticks/rev, 30' of motion, and left edge is at zero.
 	NetworkTable m_boilerTable;
