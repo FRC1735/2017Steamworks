@@ -202,13 +202,14 @@ public class DriveTrain extends Subsystem implements PIDOutput {
 		// Apply the 'dead zone' guardband to the joystick inputs:
 		// Centered joysticks may not actually read as zero due to spring variances.
 		// Therfore, remove any small values as being "noise".
-		if (Math.abs(joyLeftX) < Robot.m_joystickFilter)
+		double joystickDeadzone = SmartDashboard.getNumber("Joystick Deadzone", 0); // default if entry not found
+		if (Math.abs(joyLeftX) < joystickDeadzone)
 			joyLeftX = 0;
-		if (Math.abs(joyLeftY) < Robot.m_joystickFilter)
+		if (Math.abs(joyLeftY) < joystickDeadzone)
 			joyLeftY = 0;
-		if (Math.abs(joyRightX) < Robot.m_joystickFilter)
+		if (Math.abs(joyRightX) < joystickDeadzone)
 			joyRightX = 0;
-		if (Math.abs(joyRightY) < Robot.m_joystickFilter)
+		if (Math.abs(joyRightY) < joystickDeadzone)
 			joyRightY = 0;
 		
 		

@@ -157,7 +157,8 @@ public class DriveWithProgram extends Command {
     	double BLCrabTravel = BLDriveTravel * Math.sqrt(2)/2;
     	double BRCrabTravel = BRDriveTravel * Math.sqrt(2)/2;
 
-    	//@FIXME:  We need to work out signs for front and rear, or forward motion will look like crab motion here.
+    	//@FIXME:  We need to work an equation for calculating crab distance based on the encoders, or forward motion will look like crab motion here.
+    	// Simple crab-only may work here, but a mix of forward and crab needs some vector calculations performed...
     	int FLCrabReached = (FLCrabTravel >= m_crabDist)?1:0; // Convert bool to int
     	int FRCrabReached = (FRCrabTravel >= m_crabDist)?1:0;
     	int BLCrabReached = (BLCrabTravel >= m_crabDist)?1:0;
