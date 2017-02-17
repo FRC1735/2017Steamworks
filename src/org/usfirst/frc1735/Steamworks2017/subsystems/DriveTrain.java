@@ -70,29 +70,8 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	this.setTractionMode(); // Default to traction mode on startup.
     	m_isCrabExcursion = false; // We do not start out in any funny hybrid modes
 
-    }
-    
-    public void initDrivetrain() {
-    	// Do initialization that cannot be done in the constructor because robot.init isn't executed yet so we don't have a gyro instance.
-    	
-    	//-----------------------------
-    	// PID Subsystem Initialization
-    	//-----------------------------
-    	//PID values.values  F is feed-forward for maintaining rotational velocity.
-    	// The last two args are input source and output object (our PIDwrite() function)
-        drivelineController = new PIDController(kP, kI, kD, kF, Robot.ahrs, this);
-        drivelineController.setInputRange(-180.0f, 180.0f); // WHY IS THIS -180 to +180 RATHER THAN 0-360????
-        drivelineController.setOutputRange(-1.0, 1.0); // What is the allowable range of values to send to the output (our motor rotation)
-        drivelineController.setAbsoluteTolerance(kToleranceDegrees); // How close do we have to be in order to say we have reached the target?
-        // Robot can spin in full circle so angle might wrap from 0 to 360.
-        // 'Continuous' allows us to follow that wrap to get from 359 to 0, rather than going counterclockwise a full circle to get there.
-        drivelineController.setContinuous(true);        
-        /* Add the PID Controller to the Test-mode dashboard, allowing manual  */
-        /* tuning of the Turn Controller's P, I and D coefficients.            */
-        /* Typically, only the P value needs to be modified.                   */
-        LiveWindow.addActuator("DriveSystem", "RotateController", drivelineController);
-    }
-    
+    }    
+        
     public enum DrivetrainMode {
         kMecanum(0), kTraction(1), kCrabExcursion(2);
 
@@ -118,6 +97,26 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     }
     
     public void drivetrainInit() {
+    	// Do initialization that cannot be done in the constructor because robot.init isn't executed yet so we don't have a gyro instance.
+    	
+    	//-----------------------------
+    	// Software PID Subsystem Initialization
+    	//-----------------------------
+    	//PID values.values  F is feed-forward for maintaining rotational velocity.
+    	// The last two args are input source and output object (our PIDwrite() function)
+        drivelineController = new PIDController(kP, kI, kD, kF, Robot.ahrs, this);
+        drivelineController.setInputRange(-180.0f, 180.0f); // WHY IS THIS -180 to +180 RATHER THAN 0-360????
+        drivelineController.setOutputRange(-1.0, 1.0); // What is the allowable range of values to send to the output (our motor rotation)
+        drivelineController.setAbsoluteTolerance(kToleranceDegrees); // How close do we have to be in order to say we have reached the target?
+        // Robot can spin in full circle so angle might wrap from 0 to 360.
+        // 'Continuous' allows us to follow that wrap to get from 359 to 0, rather than going counterclockwise a full circle to get there.
+        drivelineController.setContinuous(true);        
+        /* Add the PID Controller to the Test-mode dashboard, allowing manual  */
+        /* tuning of the Turn Controller's P, I and D coefficients.            */
+        /* Typically, only the P value needs to be modified.                   */
+        LiveWindow.addActuator("DriveSystem", "RotateController", drivelineController);
+        
+        //Initialize the motor controller (And encoder) hardware
     	// Choose the sensor and sensor dirction
     	fLMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
     	fLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
@@ -129,6 +128,9 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	bRMotor.reverseSensor(false); //Assume no inversion at this time.
 
     	// We might choose to use the controller PID for doing clean positional driving (e.g., drive 36 inches).  here's some initial setup thoughts
+    	// Important note:  Changing the mode to .Position causes the motor controller to only obey setpoint commands.
+    	// This renders the motor controller useless for our implementation of the joystick controls, which set the motor speed ia the WPILib routines.
+    	// Thus, this code can't be used unless we ditch the software PID and use the full "Motion Magic" feature of the Talons...
     	if (false) {
 	    	// No configEncoderCodesPerRev is needed for CTRE Mag Encoder.
 	    	fLMotor.configNominalOutputVoltage(+0f,  -0f);
@@ -149,12 +151,45 @@ public class DriveTrain extends Subsystem implements PIDOutput {
 	        fLMotor.setP(0.1);
 	        fLMotor.setI(0.0); 
 	        fLMotor.setD(0.0);
-	         
+
+	        fRMotor.setProfile(0);
+	        fRMotor.setF(0);
+	        fRMotor.setP(0.1);
+	        fRMotor.setI(0.0); 
+	        fRMotor.setD(0.0);
+
+	        bLMotor.setProfile(0);
+	        bLMotor.setF(0);
+	        bLMotor.setP(0.1);
+	        bLMotor.setI(0.0); 
+	        bLMotor.setD(0.0);
+
+	        bRMotor.setProfile(0);
+	        bRMotor.setF(0);
+	        bRMotor.setP(0.1);
+	        bRMotor.setI(0.0); 
+	        bRMotor.setD(0.0);
+	        
 	        // Set the mode to be position-based
 	        fLMotor.changeControlMode(TalonControlMode.Position);
+	        fRMotor.changeControlMode(TalonControlMode.Position);
+	        bLMotor.changeControlMode(TalonControlMode.Position);
+	        bRMotor.changeControlMode(TalonControlMode.Position);
+	        
 	        // Must set an initial setpoint as well.  setpoint appears to be number of rotations desired (positive or negative)
 	        fLMotor.set(0);
+	        fRMotor.set(0);
+	        bLMotor.set(0);
+	        bRMotor.set(0);
     	}
+    	
+    	// We do want to clear the sensor values at the beginning, just to make debug easier.
+    	RobotMap.driveTrainFLMotor.setEncPosition(0);
+    	RobotMap.driveTrainFRMotor.setEncPosition(0);
+    	RobotMap.driveTrainBLMotor.setEncPosition(0);
+    	RobotMap.driveTrainBRMotor.setEncPosition(0);
+
+
     }
 
     public void arcadeDrive(double moveValue,double rotateValue) {
@@ -164,6 +199,15 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	robotDrive41.arcadeDrive(-moveValue, rotateValue, squaredInputs); //Asssume joystick inputs (Y fwd == -1)
     	printMXPInfo();
     	
+    	if (Robot.isDbgOn()) {
+    		// Print the encoder values
+    		double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/4096.0; // Returns 4*1024 = 4096 units per rev
+    		double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/4096.0;
+    		double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/4096.0;
+    		double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/4096.0;
+    		
+    		System.out.println("FL = " + FLCurrentRotation + " FR = " + FRCurrentRotation + " BL = " + BLCurrentRotation + " BR = " + BRCurrentRotation);
+    	}   	
     }
     
     public void mecanumDrive(double driveX,double driveY,double rotation) {
@@ -176,7 +220,20 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	// Because the library for Mecanum (only) assumes joystick, we invert here (And the library inverts it back)
 		robotDrive41.mecanumDrive_Cartesian(driveX, -driveY, rotation, gyroAngle ); // WPILIB ASSUMES Joystick input (Y forward == -1)
     	printMXPInfo();
-    }
+
+    	if (Robot.isDbgOn()) {
+    		// Print the encoder values
+    		// We use the "backdoor" method so that we don't force the controller to use the PID.
+    		// The backdoor doesn't use the reverseSensor() function, so we have to do it manually here.
+    		// While the "selected sensor" uses units of rotation, the backdoor uses only natie units of 4*CPR (counts per revolution).
+    		double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/4096.0; // Returns 4*1024 = 4096 units per rev
+    		double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/4096.0;
+    		double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/4096.0;
+    		double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/4096.0;
+    		
+    		System.out.println("FL = " + FLCurrentRotation + " FR = " + FRCurrentRotation + " BL = " + BLCurrentRotation + " BR = " + BRCurrentRotation);
+    	}
+}
 
 	public void octaCanumDriveWithJoysticks(Joystick joyLeft, Joystick joyRight) {
 		// Extract the joystick values
@@ -395,7 +452,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     
     // wheel distance per revolution should be circumference, but should empirically verified.
     // We are SWAGging that crabbing will be sqrt2/2 factor off this.
-    public static final double m_inchesPerRevolution = 4*3.1415927; // for starters, use circuference of 4" wheel
+    public static final double m_inchesPerRevolution = 2*3.1415927*4; // for starters, use circumference of 4" wheel
 
 }
 

@@ -108,6 +108,16 @@ public class Shooter extends Subsystem {
     	}
     }
   
+    // Other objects (like the feeder) need to know if we are actively running the shooter.
+    public boolean isRunning() {
+    	return (shootMaster.getSetpoint() > 0); // if shooter told to spin... then it is probably on.  Let's assume we don't spin it backwards for feeder purposes, so only look for positive values.
+     }
+
+    // tell other objects (like the feeder) if we are at the desired speed.
+    // Note that we might want to know if the shooter has stopped rotating, so have to be able to check for 0 RPM too.  We can do this by saying !isRunning() && isAtSpeed(), which implies we have reached zero.
+    public boolean isAtSpeed() {
+    	return (shootMaster.getClosedLoopError() <= 5); // We might have to allow some error... let's try 5 RPM for now.
+    }
     
     // Member variables
     int m_loops = 0; // for reducing frequency of print statements
