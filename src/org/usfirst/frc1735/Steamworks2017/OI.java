@@ -104,6 +104,13 @@ public class OI {
         // This button sets the master debug variable.
         // It can be dynamically set during robot operation to turn on/off debug messages!
         SmartDashboard.putBoolean("Master Debug Enable", false);
+        
+        // Initialize the "camera light status" indicator on the SmartDashboard.  It only updates when the command is called.
+        SmartDashboard.putBoolean("Boiler Camera Light On", false);
+        
+        // Initialize "Demo Mode" variable for the SmartDashboard.
+        // This is used to turn off joysticks, etc. at demo events (to avoid having to pull fuses)
+        SmartDashboard.putBoolean("Demo Mode", false);
        
     }
 

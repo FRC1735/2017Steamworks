@@ -48,7 +48,7 @@ public class DriveWIthJoysticks extends Command {
     protected void execute() {
     	// "Demo Mode" turns off the driveline for demonstration events so that we don't have to pull fuses.
     	// Ideally, we only check this every few seconds to avoid performance implications at competitions.
-		if ((++m_loops%500) == 0) { // at 20ms/loop, 50 loops per second, 500 loops per 10 seconds
+		if ((++m_loops%500) == 0) { // at 20ms/loop, 50 loops per second, so limit query to 500 loops per 10 seconds
 			m_demoMode = SmartDashboard.getBoolean("Demo Mode", false);// default to false if not found in the table
 		}
 		if (!m_demoMode) {
