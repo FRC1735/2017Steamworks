@@ -32,6 +32,9 @@ public class DriveWithProgram extends Command {
 	private double m_crabMagDir;
 	private double m_crabDist;
 	
+	// For debug printing
+	private int m_loopcnt = 0;
+	
 	// Member variables set by initialize()
 	private double m_FLStartRotation; // Front Left encoder starting value in rotation units
 	private double m_FRStartRotation; // Front Right
@@ -89,9 +92,20 @@ public class DriveWithProgram extends Command {
     	m_BLStartRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/2048.0;
     	m_BRStartRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
     	
+    	// Print intial encoder values (should be in revolutions)
+    	System.out.println("Initial:  ReqDist = " + m_driveDist + " FL = " + m_FLStartRotation + " FR = " + m_FRStartRotation + " BL = " + m_BLStartRotation + " BR = " + m_BRStartRotation);
+    	System.out.println("crabDist = " + m_crabDist);
     	// Get the initial Gyro heading
     	double rawInitialGyroAngle = Robot.ahrs.getAngle();
-
+    	System.out.println("initial getAngle is " + rawInitialGyroAngle);
+    	// We need this raw initial angle to be "zero" as far as future 'get' values are concerned
+    	// This is because the input is relative to the zeroed gyro value not the initial heading at the time we start
+    	// Zero the yaw.  This forces an adjustment factor to future getAngle calls such that everything is relative to the current
+    	// position of the gyro (i.e. getAngle after this point should return zero if no motion has occurred)
+    	Robot.ahrs.zeroYaw();
+    	double zeroedInitialGyroAngle = Robot.ahrs.getAngle();
+    	//System.out.println("corrected initial getAngle is " + zeroedInitialGyroAngle);
+    	
     	// Calculate our PID target for heading.
     	// If we are just driving straight, the turnAngle (i.e. the delta) will be zero.  Maintain initial heading.
      	// If we are asked to turn, the turnAngle will be nonzero, and we will move to a new heading.
@@ -103,7 +117,7 @@ public class DriveWithProgram extends Command {
     	// Assuming that zero is relative to the reset value of the gyro, then we can take the current heading +/- requested delta
     	// modulo 360 to get a [0:360] value, and then normalize to [-180:+180].
     	// A=0:180 is fine.  if larger, then value must be 360-A.  i.e. 181 => -179
-    	double rawTargetGyroAngle = rawInitialGyroAngle + m_turnAngle; // create target angle
+    	double rawTargetGyroAngle = zeroedInitialGyroAngle + m_turnAngle; // create target angle
     	double targetModuloGyroAngle = rawTargetGyroAngle%360; // Modulo the result to get 0:360
     	// (Subtle note:  this code shows a preference for a 180' turn to be clockwise.  Change the > to be >= to prefer a counter-clockwise about-face)
     	double absoluteTargetGyroAngle;
@@ -118,9 +132,9 @@ public class DriveWithProgram extends Command {
     	}
     	 
     	// Print the result for debug
-    	System.out.println(	"Raw initial angle = " + rawInitialGyroAngle +
-    						"\nRaw Target = " + rawTargetGyroAngle +
-    						"\nAbsolute Target = " + absoluteTargetGyroAngle);
+    	//System.out.println(	"Raw initial angle = " + zeroedInitialGyroAngle +
+    	//					"\nRaw Target = " + rawTargetGyroAngle +
+    	//					"\nAbsolute Target = " + absoluteTargetGyroAngle);
 
     	
     	// Finally, enable the turn controller
@@ -159,7 +173,18 @@ public class DriveWithProgram extends Command {
     	double FRDriveTravel = Math.abs(FRCurrentRotation - m_FRStartRotation) * DriveTrain.m_inchesPerRevolution;
     	double BLDriveTravel = Math.abs(BLCurrentRotation - m_BLStartRotation) * DriveTrain.m_inchesPerRevolution;
     	double BRDriveTravel = Math.abs(BRCurrentRotation - m_BRStartRotation) * DriveTrain.m_inchesPerRevolution;
-    	    	
+    	
+    	// If we're driving in mecanum mode we have to compensate for the vector forces
+    	if (m_mode == DriveTrain.DrivetrainMode.kMecanum) {
+    		 FLDriveTravel = FLDriveTravel * Math.sqrt(2)/2;
+    		 FRDriveTravel = FRDriveTravel * Math.sqrt(2)/2;
+    		 BLDriveTravel = BLDriveTravel * Math.sqrt(2)/2;
+    		 BRDriveTravel = BRDriveTravel * Math.sqrt(2)/2;
+    	}
+   		
+    	//if (m_loopcnt%25 == 0)
+    	//	System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
+    	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
     	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
     	// but if one wheel slips on starup, it will reach the distance limit too early, and we won't have gone far enough
@@ -169,7 +194,8 @@ public class DriveWithProgram extends Command {
     	int BLDriveReached = (BLDriveTravel >= m_driveDist)?1:0;
     	int BRDriveReached = (BRDriveTravel >= m_driveDist)?1:0;
     	
-    	boolean driveDistReached = (FLDriveReached + FRDriveReached + BLDriveReached + BRDriveReached) >= 2;
+    	boolean driveDistReached = ((FLDriveReached + FRDriveReached + BLDriveReached + BRDriveReached) >= 2);
+    	//System.out.println("Reached: Answer = " + driveDistReached + " FL "+ FLDriveReached + " FR "+ FRDriveReached + " BL "+ BLDriveReached + " BR " + BRDriveReached);
     	
     	// From travel, determine if we reached the crab distance limit
     	// This is tougher because wheels spin in opposite directions!
@@ -187,10 +213,11 @@ public class DriveWithProgram extends Command {
     	int BLCrabReached = (BLCrabTravel >= m_crabDist)?1:0;
     	int BRCrabReached = (BRCrabTravel >= m_crabDist)?1:0;
     	
-    	boolean crabDistReached = (FLCrabReached + FRCrabReached + BLCrabReached + BRCrabReached) >= 2;
+    	boolean crabDistReached = ((FLCrabReached + FRCrabReached + BLCrabReached + BRCrabReached) >= 2);
     	
     	// IF we specified no angle, then the PID was trying to keep us on a constant heading an onTarget() is still valid to look at.
     	boolean angleReached = Robot.driveTrain.drivelineController.onTarget();
+    	System.out.println ("Timedout = " + timedOut + " driveDistReached = " + driveDistReached + " angleReached = " + angleReached + " AngleError =" + Robot.driveTrain.drivelineController.getAvgError()); 
     			
     	return (timedOut || (driveDistReached && crabDistReached && angleReached));
     }
@@ -199,6 +226,12 @@ public class DriveWithProgram extends Command {
     protected void end() {
     	Robot.driveTrain.drivelineController.disable(); // Stop the turn controller
     	Robot.driveTrain.stop(); // Stop the motors
+    	
+    	// Print the uncorrected angle for debug
+    	//System.out.println("Final angle is: " + Robot.ahrs.getAngle());
+    	//System.out.println("end correction factor is " + Robot.ahrs.getAngleAdjustment());
+    	//Robot.ahrs.setAngleAdjustment(0);
+    	//System.out.println("Unadjusted angle is: " + Robot.ahrs.getAngle());
     	
     }
 
