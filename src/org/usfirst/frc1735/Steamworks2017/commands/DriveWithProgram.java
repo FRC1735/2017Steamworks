@@ -37,8 +37,6 @@ public class DriveWithProgram extends Command {
 	private double m_FRStartRotation; // Front Right
 	private double m_BLStartRotation; // Back Left
 	private double m_BRStartRotation; // Back Right
-	private double m_initialGyroAngle; // Starting Gyro value
-	private double m_targetGyroAngle;  // Calculated target gyro angle
 
 	// The full constructor with all the trimmings...
 	// Units:  Time in seconds, distance in inches, angle in degrees.
@@ -92,18 +90,41 @@ public class DriveWithProgram extends Command {
     	m_BRStartRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
     	
     	// Get the initial Gyro heading
-    	m_initialGyroAngle = Robot.ahrs.getAngle();
-    	System.out.println("Initial gyro angle = " + m_initialGyroAngle);
+    	double rawInitialGyroAngle = Robot.ahrs.getAngle();
 
     	// Calculate our PID target for heading.
-    	// If we are just driving straight, the turnAngle will be zero.  Maintain initial heading.
+    	// If we are just driving straight, the turnAngle (i.e. the delta) will be zero.  Maintain initial heading.
      	// If we are asked to turn, the turnAngle will be nonzero, and we will move to a new heading.
-    	// Either way, the calculation of the target angle is the same:
-    	m_targetGyroAngle = (m_initialGyroAngle + m_turnAngle);
-    	System.out.println("Target gyro angle = " + m_initialGyroAngle);
+    	// Either way, the calculation of the target angle is the same.
    	
+    	// The setpoint input for the controller is considered an absolute angle from -180 to +180 (saturating, meaning all values larger than 180 will become 180).
+    	// To properly calculate this, we must do the following:
+    	// 
+    	// Assuming that zero is relative to the reset value of the gyro, then we can take the current heading +/- requested delta
+    	// modulo 360 to get a [0:360] value, and then normalize to [-180:+180].
+    	// A=0:180 is fine.  if larger, then value must be 360-A.  i.e. 181 => -179
+    	double rawTargetGyroAngle = rawInitialGyroAngle + m_turnAngle; // create target angle
+    	double targetModuloGyroAngle = rawTargetGyroAngle%360; // Modulo the result to get 0:360
+    	// (Subtle note:  this code shows a preference for a 180' turn to be clockwise.  Change the > to be >= to prefer a counter-clockwise about-face)
+    	double absoluteTargetGyroAngle;
+    	if (targetModuloGyroAngle > 180) {
+    		absoluteTargetGyroAngle = targetModuloGyroAngle-360; // Normalize [-180:+180]
+    	}
+    	else if (targetModuloGyroAngle < -180) {
+    		absoluteTargetGyroAngle = targetModuloGyroAngle+360; // Normalize [-180:+180]
+    	}
+    	else {
+    		absoluteTargetGyroAngle = targetModuloGyroAngle;
+    	}
+    	 
+    	// Print the result for debug
+    	System.out.println(	"Raw initial angle = " + rawInitialGyroAngle +
+    						"\nRaw Target = " + rawTargetGyroAngle +
+    						"\nAbsolute Target = " + absoluteTargetGyroAngle);
+
+    	
     	// Finally, enable the turn controller
-    	Robot.driveTrain.drivelineController.setSetpoint(m_targetGyroAngle);	
+    	Robot.driveTrain.drivelineController.setSetpoint(absoluteTargetGyroAngle);	
     	Robot.driveTrain.drivelineController.enable();
    	
    }
