@@ -86,20 +86,22 @@ public class DriveWithProgram extends Command {
     	}
     	
     	// Get the initial values for all driveline encoders.  This value is in rotations.
-    	m_FLStartRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/4096.0;
-    	m_FRStartRotation = RobotMap.driveTrainFRMotor.getEncPosition()/4096.0;
-    	m_BLStartRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/4096.0;
-    	m_BRStartRotation = RobotMap.driveTrainBRMotor.getEncPosition()/4096.0;
+    	m_FLStartRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/2048.0;
+    	m_FRStartRotation = RobotMap.driveTrainFRMotor.getEncPosition()/2048.0;
+    	m_BLStartRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/2048.0;
+    	m_BRStartRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
     	
     	// Get the initial Gyro heading
     	m_initialGyroAngle = Robot.ahrs.getAngle();
+    	System.out.println("Initial gyro angle = " + m_initialGyroAngle);
 
     	// Calculate our PID target for heading.
     	// If we are just driving straight, the turnAngle will be zero.  Maintain initial heading.
      	// If we are asked to turn, the turnAngle will be nonzero, and we will move to a new heading.
     	// Either way, the calculation of the target angle is the same:
     	m_targetGyroAngle = (m_initialGyroAngle + m_turnAngle);
-    	
+    	System.out.println("Target gyro angle = " + m_initialGyroAngle);
+   	
     	// Finally, enable the turn controller
     	Robot.driveTrain.drivelineController.setSetpoint(m_targetGyroAngle);	
     	Robot.driveTrain.drivelineController.enable();
@@ -126,10 +128,10 @@ public class DriveWithProgram extends Command {
     	// 1) Get state of drive limit
     	//    There are four encoders.  Claim victory if any of them reached the limit (Courtesy of the Department of Redundancy Department)
     	//encoder value is returned in units of rotations.
-    	double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/4096.0;
-    	double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/4096.0;
-    	double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/4096.0;
-    	double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/4096.0;
+    	double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/2048.0;
+    	double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/2048.0;
+    	double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/2048.0;
+    	double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
 
     	// Determine amount of travel in actual distance units
     	double FLDriveTravel = Math.abs(FLCurrentRotation - m_FLStartRotation) * DriveTrain.m_inchesPerRevolution;

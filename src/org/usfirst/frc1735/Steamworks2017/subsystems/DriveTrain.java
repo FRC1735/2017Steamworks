@@ -201,10 +201,10 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	
     	if (Robot.isDbgOn()) {
     		// Print the encoder values
-    		double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/4096.0; // Returns 4*1024 = 4096 units per rev
-    		double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/4096.0;
-    		double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/4096.0;
-    		double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/4096.0;
+    		double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/2048.0; // Returns 4*1024 = 4096 units per rev
+    		double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/2048.0;
+    		double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/2048.0;
+    		double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
     		
     		System.out.println("FL = " + FLCurrentRotation + " FR = " + FRCurrentRotation + " BL = " + BLCurrentRotation + " BR = " + BRCurrentRotation);
     	}   	
@@ -226,10 +226,10 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     		// We use the "backdoor" method so that we don't force the controller to use the PID.
     		// The backdoor doesn't use the reverseSensor() function, so we have to do it manually here.
     		// While the "selected sensor" uses units of rotation, the backdoor uses only natie units of 4*CPR (counts per revolution).
-    		double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/4096.0; // Returns 4*1024 = 4096 units per rev
-    		double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/4096.0;
-    		double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/4096.0;
-    		double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/4096.0;
+    		double FLCurrentRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/2048.0; // Returns 4*1024 = 4096 units per rev
+    		double FRCurrentRotation = RobotMap.driveTrainFRMotor.getEncPosition()/2048.0;
+    		double BLCurrentRotation = -RobotMap.driveTrainBLMotor.getEncPosition()/2048.0;
+    		double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
     		
     		System.out.println("FL = " + FLCurrentRotation + " FR = " + FRCurrentRotation + " BL = " + BLCurrentRotation + " BR = " + BRCurrentRotation);
     	}
@@ -448,11 +448,11 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     static final double kI = 0.00;
     static final double kD = 0.00;
     static final double kF = 0.00;
-    static final double kToleranceDegrees = 2.0f; // Stop if we are within this many degrees of the setpoint.
+    static final double kToleranceDegrees = 0.5f; // Stop if we are within this many degrees of the setpoint.
     
     // wheel distance per revolution should be circumference, but should empirically verified.
     // We are SWAGging that crabbing will be sqrt2/2 factor off this.
-    public static final double m_inchesPerRevolution = 2*3.1415927*4; // for starters, use circumference of 4" wheel
+    public static final double m_inchesPerRevolution = 3.1415927*4; // for starters, use circumference of 4" wheel
 
 }
 

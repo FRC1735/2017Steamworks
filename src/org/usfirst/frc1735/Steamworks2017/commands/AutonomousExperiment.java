@@ -48,8 +48,8 @@ public class AutonomousExperiment extends CommandGroup {
  
     	//addSequential(new PIDTurn(1,-90));
     	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kTraction,
-    										3, // timeout
-    										.5,120, // drive MagDir, dist
+    										10, // timeout
+    										.5,24, // drive MagDir, dist
     										0,0, // crab
     										0)); // Angle to turn
     } 
