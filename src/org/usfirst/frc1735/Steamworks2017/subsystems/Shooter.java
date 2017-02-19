@@ -69,6 +69,9 @@ public class Shooter extends Subsystem {
         // Must set an initial setpoint as well, in RPMs
         shootMaster.set(0); // start with shooter off!
         
+        shootFollower.changeControlMode(TalonControlMode.Follower);
+        shootFollower.set(shootMaster.getDeviceID()); // Tell it to follow the Master
+        shootFollower.reverseOutput(true);
         //Put an initial value for setpoint RPM to the SmartDashboard
         SmartDashboard.putNumber("ShooterRPM",  0);
 	}    	

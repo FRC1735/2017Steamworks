@@ -37,14 +37,18 @@ public class AutonomousCommand extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-        setTimeout(10); // Run for 10 seconds
+    	// Turn on the PID controller, zero sensor to current position, and setpoint to zero.
+    	// i.e. turn on pid, but remain right where we are.
+        Robot.driveTrain.setGearMode();
+        setTimeout(5); // set duration of commmand
 
     }
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-    	//Robot.driveTrain.arcadeDrive(1, 0); //move, rotate
-    	Robot.driveTrain.mecanumDrive(0, 1, 0); //X,Y,Rotation
+    	// Tell the system to move one revolution
+    	Robot.driveTrain.setGearSetpoint(1); // should move FL forward one rev, which means crab right by one wheel revolution
+    	
     }
 
     // Make this return true when this Command no longer needs to run execute()
@@ -54,7 +58,8 @@ public class AutonomousCommand extends Command {
 
     // Called once after isFinished returns true
     protected void end() {
-    	Robot.driveTrain.stop();
+    	// return to normal mode and stop motors
+    	Robot.driveTrain.setDriveMode();    	
     }
 
     // Called when another command which requires one or more of the same
