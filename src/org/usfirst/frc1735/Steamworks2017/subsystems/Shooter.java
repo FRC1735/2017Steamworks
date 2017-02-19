@@ -65,9 +65,9 @@ public class Shooter extends Subsystem {
         shootMaster.setD(0.0);
          
         // Set the mode to be velocity-based
-        shootMaster.changeControlMode(TalonControlMode.Speed);
+        ///shootMaster.changeControlMode(TalonControlMode.Speed);
         // Must set an initial setpoint as well, in RPMs
-        shootMaster.set(0); // start with shooter off!
+        ///shootMaster.set(0); // start with shooter off!
         
         //Put an initial value for setpoint RPM to the SmartDashboard
         SmartDashboard.putNumber("ShooterRPM",  0);
@@ -108,6 +108,11 @@ public class Shooter extends Subsystem {
     	}
     }
   
+    	public void directDrive(double input) {
+    		shootMaster.set(-input);
+    		shootFollower.set(input);
+    	}
+    	
     // Other objects (like the feeder) need to know if we are actively running the shooter.
     public boolean isRunning() {
     	return (shootMaster.getSetpoint() > 0); // if shooter told to spin... then it is probably on.  Let's assume we don't spin it backwards for feeder purposes, so only look for positive values.

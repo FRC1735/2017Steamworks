@@ -41,6 +41,11 @@ public class DriveWithProgram extends Command {
 	private double m_BLStartRotation; // Back Left
 	private double m_BRStartRotation; // Back Right
 
+	// Saved versions of each component of the drive vector for use in execute ()
+	private boolean m_driveDistReached;
+	private boolean m_crabDistReached;
+	private boolean m_angleReached;
+	
 	// The full constructor with all the trimmings...
 	// Units:  Time in seconds, distance in inches, angle in degrees.
     public DriveWithProgram(DriveTrain.DrivetrainMode mode,
@@ -144,10 +149,30 @@ public class DriveWithProgram extends Command {
    }
 
     // Called repeatedly when this Command is scheduled to run
-    protected void execute() {
-       	// Use mode bit to determine which driveline mode to use to accomplish the PID output reaction
+    protected void execute() {  	
+    	double crabMagDir;
+    	double driveMagDir;
+    	double RotateRate;
+    	
+    	if (m_crabDistReached) {
+    		crabMagDir=0;
+    	}
+    	else {
+    		crabMagDir=m_crabMagDir;
+    	}
+    	
+    		
+    	if (m_driveDistReached) {
+    		driveMagDir=0;
+    	}
+    	else {
+    		driveMagDir=m_driveMagDir;
+    	}
+       	
+    	// Use mode bit to determine which driveline mode to use to accomplish the PID output reaction
     	if (m_mode == DriveTrain.DrivetrainMode.kMecanum) {
-    		Robot.driveTrain.mecanumDrive(m_crabMagDir, m_driveMagDir, Robot.driveTrain.getPIDRotationRate()); // x,y,rot
+
+    		Robot.driveTrain.mecanumDrive(crabMagDir, driveMagDir, Robot.driveTrain.getPIDRotationRate()); // x,y,rot
     	}
     	else if (m_mode == DriveTrain.DrivetrainMode.kTraction) {
     		Robot.driveTrain.arcadeDrive(m_driveMagDir, Robot.driveTrain.getPIDRotationRate());// move, rot
@@ -219,9 +244,11 @@ public class DriveWithProgram extends Command {
     	boolean angleReached = Robot.driveTrain.drivelineController.onTarget();
     	System.out.println ("Timedout = " + timedOut + " driveDistReached = " + driveDistReached + " angleReached = " + angleReached + " AngleError =" + Robot.driveTrain.drivelineController.getAvgError()); 
     			
+    	m_driveDistReached= driveDistReached;
+    	m_crabDistReached= crabDistReached;
+    	m_angleReached= angleReached;
     	return (timedOut || (driveDistReached && crabDistReached && angleReached));
     }
-
     // Called once after isFinished returns true
     protected void end() {
     	Robot.driveTrain.drivelineController.disable(); // Stop the turn controller
