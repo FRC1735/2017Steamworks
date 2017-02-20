@@ -392,11 +392,11 @@ public class DriveTrain extends Subsystem implements PIDOutput {
         /* These functions are compatible w/the WPI Gyro Class, providing a simple  */
         /* path for upgrading from the Kit-of-Parts gyro to the navx MXP            */
         
-        SmartDashboard.putNumber(   "IMU_TotalYaw",         ahrs.getAngle()); //cumulative over time
-        SmartDashboard.putNumber(   "IMU_YawRateDPS",       ahrs.getRate());
+        SmartDashboard.putNumber(   "Raw Angle",         ahrs.getAngle()); //cumulative over time
+        SmartDashboard.putNumber(   "Rotation Rate",       ahrs.getRate());
  
         /* Display 9-axis Heading (requires magnetometer calibration to be useful)  */
-        SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
+        //SmartDashboard.putNumber(   "IMU_FusedHeading",     ahrs.getFusedHeading());
 
         /* Display estimates of velocity/displacement.  Note that these values are  */
         /* not expected to be accurate enough for estimating robot position on a    */
@@ -404,10 +404,10 @@ public class DriveTrain extends Subsystem implements PIDOutput {
         /* of these errors due to single (velocity) integration and especially      */
         /* double (displacement) integration.                                       */
         
-        SmartDashboard.putNumber(   "Velocity_X",           ahrs.getVelocityX());
-        SmartDashboard.putNumber(   "Velocity_Y",           ahrs.getVelocityY());
-        SmartDashboard.putNumber(   "Displacement_X",       ahrs.getDisplacementX());
-        SmartDashboard.putNumber(   "Displacement_Y",       ahrs.getDisplacementY());
+        //SmartDashboard.putNumber(   "Velocity_X",           ahrs.getVelocityX());
+        //SmartDashboard.putNumber(   "Velocity_Y",           ahrs.getVelocityY());
+        //SmartDashboard.putNumber(   "Displacement_X",       ahrs.getDisplacementX());
+        //SmartDashboard.putNumber(   "Displacement_Y",       ahrs.getDisplacementY());
 
     }
     
@@ -532,7 +532,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     /* controllers by displaying a form where you can enter new P, I,  */
     /* and D constants and test the mechanism.                         */
     
-    static final double kP = 0.03;
+    static final double kP = 0.05;
     static final double kI = 0.00;
     static final double kD = 0.00;
     static final double kF = 0.00;

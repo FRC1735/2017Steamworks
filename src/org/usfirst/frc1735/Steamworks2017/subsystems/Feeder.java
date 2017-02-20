@@ -57,9 +57,9 @@ public class Feeder extends Subsystem {
     public void operate(double strength) {
     	// Should we run the feeder?
     	// Query the shooter PID to see if it is 1) rotating, and 2) up to speed.
-    	if (Robot.shooter.isRunning() && Robot.shooter.isAtSpeed()) {
+    	///if (Robot.shooter.isRunning() && Robot.shooter.isAtSpeed()) {
     		feederMotor.set(strength);
-    	}
+    	///}
     }
 }
 

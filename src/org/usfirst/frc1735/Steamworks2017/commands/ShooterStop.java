@@ -37,7 +37,9 @@ public class ShooterStop extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-    	Robot.shooter.operate(0); // setpoint of 0 RPM will stop it
+    	///Robot.shooter.operate(0); // setpoint of 0 RPM will stop it
+    	System.out.println("Stopping");
+    	Robot.shooter.directDrive(0);
     }
 
     // Called repeatedly when this Command is scheduled to run

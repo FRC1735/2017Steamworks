@@ -56,7 +56,16 @@ public class TurretWithJoystick extends Command {
 		turretTarget = (turretTarget * (Robot.turret.getRightLimit() - Robot.turret.getLeftLimit())); // scale to the legal rotation range
 		turretTarget = turretTarget + Robot.turret.getLeftLimit(); // and shift to match left limit in case it's nonzero.
     	
-		RobotMap.turretTurretTurner.set(turretTarget); // target is in terms of an absolute rotation between left and right limits
+		System.out.println("Turret setpoint calculated to be " + turretTarget);
+		if (false) {
+			// Use the PID to direct the turret
+			RobotMap.turretTurretTurner.set(turretTarget); // target is in terms of an absolute rotation between left and right limits
+		}
+		else {
+			// For initial debug/bringup:  drive the joystick directly at 1/4 impulse... Just to confirm it turns.
+			// This won't obey any soft limits or restrictions, so use with extreme caution!
+			Robot.turret.directDrive(rawInput * 0.25);
+		}
     }
 
     // Make this return true when this Command no longer needs to run execute()

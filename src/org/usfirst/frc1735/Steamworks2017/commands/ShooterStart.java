@@ -45,8 +45,11 @@ public class ShooterStart extends Command {
     protected void execute() {
     	// continually fetch the setpoint from the SmartDashboard so we can tune.
     	// (Note:  In demo mode, could instead get this from the analog slider on the joystick)
-    	double currentSetpoint = SmartDashboard.getNumber("ShooterRPM",0); // Default to zero if no entry found
-    	Robot.shooter.operate(currentSetpoint); // Tell the ShooterPID to go to this speed
+    	///double currentSetpoint = SmartDashboard.getNumber("ShooterRPM",0); // Default to zero if no entry found
+    	///Robot.shooter.operate(currentSetpoint); // Tell the ShooterPID to go to this speed
+    	
+    	System.out.println("Shooting");
+    	Robot.shooter.directDrive(1);
     }
 
     // Make this return true when this Command no longer needs to run execute()
@@ -56,7 +59,8 @@ public class ShooterStart extends Command {
 
     // Called once after isFinished returns true
     protected void end() {
-    	Robot.shooter.operate(0); // setpoint of zero RPM
+    	///Robot.shooter.operate(0); // setpoint of zero RPM
+    	Robot.shooter.directDrive(0);
     }
 
     // Called when another command which requires one or more of the same
