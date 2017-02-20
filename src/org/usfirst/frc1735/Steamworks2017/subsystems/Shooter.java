@@ -69,6 +69,11 @@ public class Shooter extends Subsystem {
         // Must set an initial setpoint as well, in RPMs
         ///shootMaster.set(0); // start with shooter off!
         
+        // Configure the second non-encoder motor as a follower of the Master.
+        shootFollower.changeControlMode(TalonControlMode.Follower); // This says we will match the specified master's setpoint
+        shootFollower.reverseOutput(true); // Follower is physically flipped and must drive with opposite polarity from the Master.
+        shootFollower.set(shootMaster.getDeviceID());  // Set the follower to match the specified master's setpoint
+        
         //Put an initial value for setpoint RPM to the SmartDashboard
         SmartDashboard.putNumber("ShooterRPM",  0);
 	}    	
@@ -93,7 +98,7 @@ public class Shooter extends Subsystem {
     	
     	// Print our requested speed, error, and motor output
     	if (Robot.isDbgOn()) {
-    		// Onlly do these calulations if debugging
+    		// Only do these calulations if debugging
     		double motorOutput = shootMaster.getOutputVoltage() / shootMaster.getBusVoltage();
     		m_sb.append("Shooter:  targetSpeed = ");
     		m_sb.append(setpoint);
@@ -103,19 +108,21 @@ public class Shooter extends Subsystem {
     		m_sb.append(motorOutput);
     		
     		if ((++m_loops%10) == 0) {
-    			System.out.print(m_sb.toString());
+    			System.out.println(m_sb.toString());
     		}
+    		m_sb.setLength(0);
     	}
     }
   
-    	public void directDrive(double input) {
-    		shootMaster.set(-input);
-    		shootFollower.set(input);
-    	}
+    // Use only for non-PID driving of the shooter (for bringup testing)
+	public void directDrive(double input) {
+		shootMaster.set(-input);
+		shootFollower.set(input);
+	}
     	
     // Other objects (like the feeder) need to know if we are actively running the shooter.
     public boolean isRunning() {
-    	return (shootMaster.getSetpoint() > 0); // if shooter told to spin... then it is probably on.  Let's assume we don't spin it backwards for feeder purposes, so only look for positive values.
+    	return (shootMaster.getSetpoint() != 0); // if shooter told to spin... then it is probably on.  Let's assume we don't spin it backwards for feeder purposes, but still check for it anyways.
      }
 
     // tell other objects (like the feeder) if we are at the desired speed.

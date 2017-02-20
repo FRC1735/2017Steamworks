@@ -123,6 +123,7 @@ public class Turret extends Subsystem {
         	// If no target is currently visible, returns an error of zero (this prevents us from spinning around aimlessly if we lose the target)
         	// @FIXME:  Eventually, some kind of algorithm to help with lost vision target would be good-- do we actually search for it?
         	double errorAngle = getErrorAngle(); // Need to be careful about the sign.  Assume that lower numbers are to the left (relative to shooter).
+        	System.out.println("Turret currently is off target by " + errorAngle + " degrees.");
         	double currentAngle = turretTurner.get()*360; // go relative to our current position (which might not QUITE be the setpoint)
         	targetAngle = currentAngle + errorAngle; // if error is negative we will turn to the left.
     	}
@@ -131,6 +132,7 @@ public class Turret extends Subsystem {
         	targetAngle = currentSetpoint*360; // convert setpoint's "rotations" into "Degrees"
 		}
     	
+    	System.out.println("New target angle is " + targetAngle + " or an absolute rotational position of " + targetAngle/360);
     	// Make the targetAngle the new setpoint (Must do this periodically to avoid Motor safety timeouts!)
     	// However, the PID takes ROTATIONS as the unit of measurement.
     	// So, if one rotation is 360 degrees, then we simply divide the angle by 360.
@@ -194,16 +196,17 @@ public class Turret extends Subsystem {
     	double xWid; // components of our return value
     	
     	// 1) Get the current list of targets found.  There might be more than one visible at a time if our processing is noisy,
-    	//    or if we can't combine the two tape strips into a single blob on the coprocessor
+    	//    or if we can't combine the two tape strips into a single blob on the coprocessor.
+    	//    It might report no targets if the lighting isn't right, or the target is outside the camera's field of view.
        	// First step: get the vision system data for the target
 
-    	// Get all needed table items at (roughly) the same time, to minimize table updates between reads.
+    	// Get all needed table items at (roughly) the same time, to minimize (but not eliminate) the chance table updates between reads.
     	// (could end up with different array sizes)
     	double[] defaultValue = new double[0]; // set up a default value in case the table isn't published yet
     	double[] targetX = m_boilerTable.getNumberArray("centerX", defaultValue);    	
 		double[] width = m_boilerTable.getNumberArray("width", defaultValue);
 		if (targetX.length != width.length) {
-			// here the table updated in the middle; we'll have to punt.
+			// here the table updated in the middle and the number of elements detected is not consistent; we'll have to punt.
 			// (Yes, it could have updated to the same number of objects, but different objects.  There is no way to detect that at all)
 			// This is just to indicate noise where the number of identified contours is varying rapidly, possibly between none and one.
 			System.out.println("NetworkTable udpated in the middle of getRawTargetData; may have inconsistent datapoints!");
@@ -220,7 +223,7 @@ public class Turret extends Subsystem {
     	}
     	if (width.length==0) {
     		// No valid width.  punt and set the width to some value that matches what we'd see in auto firing from the hopper...
-    		xWid = 10; // This is an arbitrary choice until we measure it.
+    		xWid = 53; // Measured one data point at approximately the position and height that auto would shoot from.  Probably needs refinement.
     	}
     	else {
     		xWid = width[0]; // Use the first width value
@@ -228,13 +231,16 @@ public class Turret extends Subsystem {
 	    	
 	    	
     	// For initial debug, just print out the table so we can see what's going on
-/*
-    	System.out.print("centerX: ");
+    	m_sb.append("NetworkTable data:  centerX: ");
     	for (double xval : targetX) { // for each target found,
-    		System.out.print(xval + " ");
+    		m_sb.append(xval + " ");
     	}
-    	System.out.println();
-*/    	
+		System.out.print(m_sb.toString());
+		m_sb.setLength(0);
+
+		// Print the return value for debug
+		System.out.println("Calculated pixel xPos = " + xPos + ", xWid = " + xWid);
+		
     	
 	    // Return an array of the answers
 	    double[] rawData = {xPos, xWid};
@@ -256,7 +262,7 @@ public class Turret extends Subsystem {
     		// print both for debug purposes until we know this is resolved...
     		distance = (m_targetWidthInches*m_xRes)/(2*targetWidthPixels*Math.tan(m_cameraTheta));
     		// Now calculate based on manual analysis of the above data:
-    		manualDistance = 4070.9788/targetWidthPixels;
+    		manualDistance = 8141.9576/targetWidthPixels;
     		Robot.dbgPrintln("For input width " + targetWidthPixels + "\tCalculated distance is " + distance + "\tManually calculated distance is " + manualDistance);
     	}
     	else {
@@ -266,6 +272,12 @@ public class Turret extends Subsystem {
     	return distance;
     }
 
+    // Use only for non-PID debug/bringup of the turret
+    public void directDrive(double input) {
+    	turretTurner.changeControlMode(TalonControlMode.PercentVbus); // Non-PID voltage based drive
+    	turretTurner.set(input);
+    }
+    
     // Accessors for turret Commands like TurretWithJoystick.  Units are in rotations
     public double getLeftLimit() { return m_reverseSoftLimit; }
     public double getRightLimit() { return m_forwardSoftLimit; }
@@ -292,12 +304,13 @@ public class Turret extends Subsystem {
     private double m_reverseSoftLimit = 0.0; // Soft limit in rotations
     private double m_forwardSoftLimit = 30/360; // Assume 30 degree max, with left side at zero.
 	NetworkTable m_boilerTable;
+    StringBuilder m_sb = new StringBuilder(); // class for building up strings across multiple code lines
 	
 	
     //----------------------------------
     // Constants
     //----------------------------------
-	public static final double m_xRes = 320; // this is the maximum resolution in pixels for the x (horizontal) direction-- determined by how the vision pipeline is implemented.
+	public static final double m_xRes = 640; // this is the maximum resolution in pixels for the x (horizontal) direction-- determined by how the vision pipeline is implemented.
 	private static double m_cameraTheta = 30.521; // Empirically determined for Microsoft LifeCam3000 for 2017
 	private static double m_targetWidthInches = 15; //Target tape is wrapped around a 15" diameter tube, so to the camera will appear 15" wide
 	// This is the offset (in PIXELS) that we need to compensate between the camera center and the robot shooting centered.
