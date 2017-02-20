@@ -73,7 +73,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     }    
         
     public enum DrivetrainMode {
-        kMecanum(0), kTraction(1), kCrabExcursion(2);
+        kMecanum(0), kTraction(1), kCrabExcursion(2), kGearVision(3);
 
     	@SuppressWarnings("MemberName")
     	public final int value;
@@ -91,6 +91,8 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     			return kTraction;
     		case 2:
     			return kCrabExcursion;
+    		case 3:
+    			return kGearVision;
     		}
     		return null;
     	}
@@ -456,6 +458,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
          */
     	// Assume 0.5" error.  and 4" diameter wheel.
     	// one rotation is pi*d = 12.5664"; assume 512 CPR (docs say 1024, but that appears to be 2x off?)
+    	System.out.println("Entering GearVision mode.  Allowable error is " + Math.round(m_gearErrVal*2048) + "encoder ticks (4*CPR with CPR assumed 2048)");
     	fLMotor.setAllowableClosedLoopErr((int) Math.round(m_gearErrVal*2048));// wants units of 4*CPR.
     	/* set closed loop gains in slot0 qnd slot1*/
     	// Note that these can be set via roborio web interface for dynamic tuning...
