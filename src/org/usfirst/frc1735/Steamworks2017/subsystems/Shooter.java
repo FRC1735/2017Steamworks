@@ -74,6 +74,9 @@ public class Shooter extends Subsystem {
         shootFollower.reverseOutput(true); // Follower is physically flipped and must drive with opposite polarity from the Master.
         shootFollower.set(shootMaster.getDeviceID());  // Set the follower to match the specified master's setpoint
         
+        shootFollower.changeControlMode(TalonControlMode.Follower);
+        shootFollower.set(shootMaster.getDeviceID()); // Tell it to follow the Master
+        shootFollower.reverseOutput(true);
         //Put an initial value for setpoint RPM to the SmartDashboard
         SmartDashboard.putNumber("ShooterRPM",  0);
 	}    	

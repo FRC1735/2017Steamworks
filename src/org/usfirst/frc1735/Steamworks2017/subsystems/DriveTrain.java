@@ -73,7 +73,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     }    
         
     public enum DrivetrainMode {
-        kMecanum(0), kTraction(1), kCrabExcursion(2);
+        kMecanum(0), kTraction(1), kCrabExcursion(2), kGearVision(3);
 
     	@SuppressWarnings("MemberName")
     	public final int value;
@@ -91,6 +91,8 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     			return kTraction;
     		case 2:
     			return kCrabExcursion;
+    		case 3:
+    			return kGearVision;
     		}
     		return null;
     	}
@@ -433,12 +435,104 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     boolean m_isCrabExcursion; // Keep track of whether we are temporarily crabbing from traction mode
     
     //--------------------------------
-    // PID subsystem variables
+    // HW PID for GearVision mode
+    //--------------------------------
+    
+    // Routine to switch hardware into a hardware PID mode for gear delivery
+     public void setGearMode() {
+    	// Grab current operation mode and save it off for later if necessary
+    	m_savedTalonMode = fLMotor.getControlMode();
+    	
+    	// We already set up the sensors in drivetrainInit()
+    	
+    	// No configEncoderCodesPerRev is needed for CTRE Mag Encoder.
+    	fLMotor.configNominalOutputVoltage(+0f,  -0f);
+    	// short distance profile0
+    	//fLMotor.configPeakOutputVoltage(+2.4f,  -2.4f);  // corresponds to a -1:1 scale of 0.2 for max output.
+    	// Medium distance profile1
+       	fLMotor.configPeakOutputVoltage(+4.5f,  -4.5f);  // corresponds to a -1:1 scale of 0.375 for max output.
+    	
+    	// @FIXME:  We might need to add a voltage ramp rate if we accelerate too quickly
+    	//fLMotor.setVoltageRampRate(something)
+    	
+    	/* set the allowable closed-loop error,
+         * Closed-Loop output will be neutral within this range.
+         * See Table in Section 17.2.1 for native units per rotation. 
+         */
+    	// Assume 0.5" error.  and 4" diameter wheel.
+    	// one rotation is pi*d = 12.5664"; assume 512 CPR (docs say 1024, but that appears to be 2x off?)
+    	System.out.println("Entering GearVision mode.  Allowable error is " + Math.round(m_gearErrVal*2048) + "encoder ticks (4*CPR with CPR assumed 2048)");
+    	fLMotor.setAllowableClosedLoopErr((int) Math.round(m_gearErrVal*2048));// wants units of 4*CPR.
+    	/* set closed loop gains in slot0 qnd slot1*/
+    	// Note that these can be set via roborio web interface for dynamic tuning...
+        fLMotor.setProfile(1); // Short range
+        fLMotor.setF(0);
+        fLMotor.setP(10.0);
+        fLMotor.setI(0.0); 
+        fLMotor.setD(0.0);
+
+        fLMotor.setProfile(0); // Medium range
+        fLMotor.setF(0);
+        fLMotor.setP(4.0);
+        fLMotor.setI(0.0); 
+        fLMotor.setD(0.0);
+        
+        
+        // Set FL as the master, and the rest as followers of its magnitude
+        fLMotor.changeControlMode(TalonControlMode.Position);
+        fRMotor.changeControlMode(TalonControlMode.Follower);
+        bLMotor.changeControlMode(TalonControlMode.Follower);
+        bRMotor.changeControlMode(TalonControlMode.Follower);
+        
+        // Get the follower output inversions correct.
+        // To crab left:
+        // FL = Reverse, FR = Forward.
+        // BL = Forward, BR = Reverse.
+        // 
+        // Therefore, if FL is the master, FR and BL must be output inverted for crabbing
+        fRMotor.reverseOutput(true);
+        bLMotor.reverseOutput(true);
+
+        // When entering this mode, zero out the "position" of the sensor
+        fLMotor.setPosition(0);
+        
+        // Initial setpoint of zero (meaning no motion)
+        fLMotor.set(0);
+        
+        // Followers do whatever master does:
+        fRMotor.set(fLMotor.getDeviceID());
+        bLMotor.set(fLMotor.getDeviceID());
+        bRMotor.set(fLMotor.getDeviceID());
+   	
+    }
+
+     public void setDriveMode() {
+    	 // Return PID mode to the normal drive-by-joystick behavior:
+         fLMotor.changeControlMode(m_savedTalonMode);
+         fRMotor.changeControlMode(m_savedTalonMode);
+         bLMotor.changeControlMode(m_savedTalonMode);
+         bRMotor.changeControlMode(m_savedTalonMode);
+
+         this.stop();
+     }
+     
+     public boolean gearOnTarget() {
+    	 return (fLMotor.getClosedLoopError() <= m_gearErrVal);
+     }
+     
+     // Just set position PID to whatever the gear system requests...
+     // This is the number of rotations from the zeroed position.
+     public void setGearSetpoint(double target) {
+    	 fLMotor.set(target);
+     }
+    
+    //--------------------------------
+    // SW PID subsystem variables
     //--------------------------------
     public PIDController drivelineController; // Use this PID controller to accomplish turns and track straight when driving forward.
     double m_rotateToAngleRate; // PID output tells us how much to rotate to reach the desired setpoint target.
     
-    /* The following PID Controller coefficients will need to be tuned */
+    /* The following Software PID Controller coefficients will need to be tuned */
     /* to match the dynamics of your drive system.  Note that the      */
     /* SmartDashboard in Test mode has support for helping you tune    */
     /* controllers by displaying a form where you can enter new P, I,  */
@@ -449,6 +543,10 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     static final double kD = 0.00;
     static final double kF = 0.00;
     static final double kToleranceDegrees = 0.5f; // Stop if we are within this many degrees of the setpoint.
+    
+    // Hardware PID related variables
+    TalonControlMode m_savedTalonMode;
+	static final double m_gearErrVal = (0.5)/(3.1415927*4);
     
     // wheel distance per revolution should be circumference, but should empirically verified.
     // We are SWAGging that crabbing will be sqrt2/2 factor off this.

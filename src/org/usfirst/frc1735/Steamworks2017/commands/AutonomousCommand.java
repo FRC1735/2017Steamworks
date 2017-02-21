@@ -12,6 +12,7 @@
 package org.usfirst.frc1735.Steamworks2017.commands;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc1735.Steamworks2017.Robot;
+import org.usfirst.frc1735.Steamworks2017.subsystems.DriveTrain;
 
 /**
  *
@@ -37,24 +38,39 @@ public class AutonomousCommand extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-        setTimeout(10); // Run for 10 seconds
+    	// Turn on the PID controller, zero sensor to current position, and setpoint to zero.
+    	// i.e. turn on pid, but remain right where we are.
+    	Robot.driveTrain.setMecanumMode(); // force the state of the driveline into mecanum mode (pistons, etc)
+        Robot.driveTrain.setGearMode(); // and switch the driveline control over to gearVision HW PID.  zeros sensor too.
+        setTimeout(5); // set duration of commmand timeout in case we fail to find/reach our target
 
+        // For full vision automation, must do the following:
+        if (false) {
+        	Robot.gearVision.setVisionEnable(true); // enable the vision feedback.  @FIXMD:  I don't think this is hooked up to anything yet.
+        	double errorDistance = Robot.gearVision.getErrorDistance(); // How many inches do we need to travel?
+        	m_targetRotationSetpoint = errorDistance / DriveTrain.m_inchesPerRevolution; // This is the setpoint relative to our current position of zero.
+        }
+        else {
+        	m_targetRotationSetpoint = 1; // should move FL forward one rev, which means crab right by one wheel revolution
+        }
     }
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-    	//Robot.driveTrain.arcadeDrive(1, 0); //move, rotate
-    	Robot.driveTrain.mecanumDrive(0, 1, 0); //X,Y,Rotation
+    	// Tell the system to move one revolution
+    	Robot.driveTrain.setGearSetpoint(m_targetRotationSetpoint); // Crab over to the required setpoint
+    	
     }
 
     // Make this return true when this Command no longer needs to run execute()
     protected boolean isFinished() {
-        return isTimedOut();
+        return (isTimedOut() || Robot.gearVision.onTarget());
     }
 
     // Called once after isFinished returns true
     protected void end() {
-    	Robot.driveTrain.stop();
+    	// return to normal mode and stop motors
+    	Robot.driveTrain.setDriveMode();    	
     }
 
     // Called when another command which requires one or more of the same
@@ -62,4 +78,7 @@ public class AutonomousCommand extends Command {
     protected void interrupted() {
     	this.end();
     }
+    
+    // Storage for desired setpoint calculation
+    double m_targetRotationSetpoint;
 }
