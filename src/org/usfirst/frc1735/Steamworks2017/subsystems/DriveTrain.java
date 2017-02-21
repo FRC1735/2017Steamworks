@@ -447,9 +447,12 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	
     	// No configEncoderCodesPerRev is needed for CTRE Mag Encoder.
     	fLMotor.configNominalOutputVoltage(+0f,  -0f);
-    	fLMotor.configPeakOutputVoltage(+2.4f,  -2.4f);  // corresponds to a -1:1 scale of 0.2 for max output.
+    	// short distance profile0
+    	//fLMotor.configPeakOutputVoltage(+2.4f,  -2.4f);  // corresponds to a -1:1 scale of 0.2 for max output.
+    	// Medium distance profile1
+       	fLMotor.configPeakOutputVoltage(+4.5f,  -4.5f);  // corresponds to a -1:1 scale of 0.375 for max output.
     	
-    	// @FIXME:  We might need to add a voltage ramp rate if we accellerate too quickly
+    	// @FIXME:  We might need to add a voltage ramp rate if we accelerate too quickly
     	//fLMotor.setVoltageRampRate(something)
     	
     	/* set the allowable closed-loop error,

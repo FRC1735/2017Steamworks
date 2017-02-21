@@ -167,20 +167,16 @@ public class GearVision extends PIDSubsystem {
     	
     	// Get the raw position and object width from NetworkTables:
     	double [] rawData = getRawTargetData();
-    	double currentXPos = rawData[0];
-    	// double xWid = rawData[1]; // Don't need this for angle calculation.
+    	double xPos = rawData[0]; // Target offset from center in pixels
+    	double xWid = rawData[1]; // Target width in pixels
     	
-    	if (false) {
-    	// Given a measured angle Theta from image center to edge of FOV
-    	// if the raw pixel distance over that angle is XRes/2=160, then each pixel off-center is (e.g.) 30.521/160 = 0.19075625 degrees
-    	// Our answer is therefore is the pixel error multiplied by degrees_per_pixel:
-    	double pixelError = currentXPos - desiredCenter;
-    	return (pixelError * (m_cameraTheta/(m_xRes/2)));
-    	}
-    	else {
-    		// @FIXME:  Calculate the proper distance instead of angle
-    		return 0;
-    	}
+    	double imageErrorDistance = xPos - desiredCenter; // Make errors to the right of center be positive
+    	
+    	// Using similar triangles and ratios...
+    	// The ratio of the (camera image of the target width in pixels) to the (real width in inches) 
+    	// should be the same as the ratio of the (camera image center offset ["error distance"] in pixels) vs (offset in inches)
+    	// Therefore:
+    	return (xWid * imageErrorDistance)/m_targetWidthInches;
     	
     }
     
