@@ -91,6 +91,11 @@ public class DriveWithProgram extends Command {
     		m_crabDist = -m_crabDist;
     	}
     	
+    	// Zero out the booleans for "have we reached our limits?"
+    	m_driveDistReached = false;
+    	m_crabDistReached  = false;
+    	m_angleReached     = false;
+
     	// Get the initial values for all driveline encoders.  This value is in rotations.
     	m_FLStartRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/2048.0;
     	m_FRStartRotation = RobotMap.driveTrainFRMotor.getEncPosition()/2048.0;
@@ -175,7 +180,7 @@ public class DriveWithProgram extends Command {
     		Robot.driveTrain.mecanumDrive(crabMagDir, driveMagDir, Robot.driveTrain.getPIDRotationRate()); // x,y,rot
     	}
     	else if (m_mode == DriveTrain.DrivetrainMode.kTraction) {
-    		Robot.driveTrain.arcadeDrive(m_driveMagDir, Robot.driveTrain.getPIDRotationRate());// move, rot
+    		Robot.driveTrain.arcadeDrive(driveMagDir, Robot.driveTrain.getPIDRotationRate());// move, rot
     	}
 
     }
@@ -194,21 +199,21 @@ public class DriveWithProgram extends Command {
     	double BRCurrentRotation = RobotMap.driveTrainBRMotor.getEncPosition()/2048.0;
 
     	// Determine amount of travel in actual distance units
+    	// If we're driving in mecanum mode we don't have to compensate for distance because the diameter of the wheel is the same.
     	double FLDriveTravel = Math.abs(FLCurrentRotation - m_FLStartRotation) * DriveTrain.m_inchesPerRevolution;
     	double FRDriveTravel = Math.abs(FRCurrentRotation - m_FRStartRotation) * DriveTrain.m_inchesPerRevolution;
     	double BLDriveTravel = Math.abs(BLCurrentRotation - m_BLStartRotation) * DriveTrain.m_inchesPerRevolution;
     	double BRDriveTravel = Math.abs(BRCurrentRotation - m_BRStartRotation) * DriveTrain.m_inchesPerRevolution;
     	
-    	// If we're driving in mecanum mode we have to compensate for the vector forces
     	if (m_mode == DriveTrain.DrivetrainMode.kMecanum) {
-    		 FLDriveTravel = FLDriveTravel * Math.sqrt(2)/2;
-    		 FRDriveTravel = FRDriveTravel * Math.sqrt(2)/2;
-    		 BLDriveTravel = BLDriveTravel * Math.sqrt(2)/2;
-    		 BRDriveTravel = BRDriveTravel * Math.sqrt(2)/2;
+    		 FLDriveTravel = FLDriveTravel * 0.5; // Empirical
+    		 FRDriveTravel = FRDriveTravel * 0.5;
+    		 BLDriveTravel = BLDriveTravel * 0.5;
+    		 BRDriveTravel = BRDriveTravel * 0.5;
     	}
    		
-    	//if (m_loopcnt%25 == 0)
-    	//	System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
+    	if (++m_loopcnt%25 == 0)
+    		System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
     	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
     	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
