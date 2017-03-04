@@ -10,6 +10,7 @@
 
 
 package org.usfirst.frc1735.Steamworks2017.commands;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc1735.Steamworks2017.Robot;
 import org.usfirst.frc1735.Steamworks2017.RobotMap;
@@ -96,6 +97,13 @@ public class DriveWithProgram extends Command {
     	m_crabDistReached  = false;
     	m_angleReached     = false;
 
+    	// All program control assumes that we are the RED alliance (boiler is to the drivers' right).
+    	// If we are the BLUE alliance, angles and crab need to be negated!
+    	if (Robot.m_alliance == DriverStation.Alliance.Blue) {
+    		m_turnAngle = -m_turnAngle;
+    		m_crabMagDir = -m_crabMagDir;
+    	}
+    	
     	// Get the initial values for all driveline encoders.  This value is in rotations.
     	m_FLStartRotation = -RobotMap.driveTrainFLMotor.getEncPosition()/2048.0;
     	m_FRStartRotation = RobotMap.driveTrainFRMotor.getEncPosition()/2048.0;

@@ -65,7 +65,7 @@ public class Robot extends IterativeRobot {
     public static AHRS ahrs;
     
     // holds the driverstation alliance information from FMS (use for handling assymetric fields)
-    public Alliance m_alliance;
+    public static Alliance m_alliance;
     
     // ============================
     // Performance Analysis support
