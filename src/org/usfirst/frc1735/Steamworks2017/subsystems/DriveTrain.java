@@ -545,7 +545,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     static final double kToleranceDegrees = 0.5f; // Stop if we are within this many degrees of the setpoint.
     
     // Hardware PID related variables
-    TalonControlMode m_savedTalonMode;
+    TalonControlMode m_savedTalonMode = TalonControlMode.PercentVbus; // I think this is the right mode for normal driving.
 	static final double m_gearErrVal = (0.5)/(3.1415927*4);
     
     // wheel distance per revolution should be circumference, but should empirically verified.

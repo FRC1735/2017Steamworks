@@ -49,11 +49,11 @@ public class AutonomousExperiment extends CommandGroup {
     	//addSequential(new PIDTurn(1,-90));
     	addSequential(new Delay(0.5)); // Let traction turn on before we try to move.
     	//addSequential(new ToggleDrivetrain());
-    	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kTraction,
+    	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kMecanum,
     										10, // timeout
-    										.5,120, // drive MagDir, dist
+    										0,0, // drive MagDir, dist
     										0,0, // crab
-    										0)); // Angle to turn
+    										-60)); // Angle to turn
     	if (false) {
     	addSequential(new Delay(0.5)); // settle time
     	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kMecanum,

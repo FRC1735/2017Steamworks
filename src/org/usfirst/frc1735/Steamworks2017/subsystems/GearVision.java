@@ -169,26 +169,27 @@ public class GearVision extends PIDSubsystem {
     	double desiredCenter = m_xRes/2 + SmartDashboard.getNumber("Gear Center Offset (pixels)", m_targetCenterOffset); // Default to the compiled value if entry not found
     	
     	// Get the raw position and object width from NetworkTables:
-    	double [] rawData = getRawTargetData();
-    	double xPos = rawData[0]; // Target offset from center in pixels
-    	double xWid = rawData[1]; // Target width in pixels
+    	double [][] rawData = getRawTargetData();
+    	double xPos[] = rawData[0]; // Target offset from center in pixels
+    	double xWidArr[] = rawData[1]; // Target width in pixels
     	
-    	double imageErrorDistance = xPos - desiredCenter; // Make errors to the right of center be positive
+    	double xWid = Math.abs(xPos[1]-xPos[0]) + xWidArr[0]/2 + xWidArr[1]/2;
+    	double imageErrorDistance = (Math.abs(xPos[1]-xPos[0])/2 + Math.min(xPos[0],  xPos[1])) - desiredCenter; // Make errors to the right of center be positive
     	
     	// Using similar triangles and ratios...
     	// The ratio of the (camera image of the target width in pixels) to the (real width in inches) 
     	// should be the same as the ratio of the (camera image center offset ["error distance"] in pixels) vs (offset in inches)
     	// Therefore:
-    	return (xWid * imageErrorDistance)/m_targetWidthInches;
+    	return ((imageErrorDistance* m_targetWidthInches)/xWid);
     	
     }
     
     // Return data for a single contour (the Table presents an array of each piece of data, unfortunately... have to turn it sideways
     // [0]: the pixel position of the center of the target's X axis
     // [1]: the width of the target (total width)
-    public double[] getRawTargetData() {
-    	double xPos;
-    	double xWid; // components of our return value
+    public double[][] getRawTargetData() {
+    	double xPos[] = new double [0];
+    	double xWid[] = new double [0]; // components of our return value
     	
     	// 1) Get the current list of targets found.  There might be more than one visible at a time if our processing is noisy,
     	//    or if we can't combine the two tape strips into a single blob on the coprocessor
@@ -196,7 +197,7 @@ public class GearVision extends PIDSubsystem {
 
     	// Get all needed table items at (roughly) the same time, to minimize table updates between reads.
     	// (could end up with different array sizes)
-    	double[] defaultValue = new double[0]; // set up a default value in case the table isn't published yet
+    	double[] defaultValue = new double[] {0,0}; // set up a default value in case the table isn't published yet
     	double[] targetX = m_gearTable.getNumberArray("centerX", defaultValue);    	
 		double[] width = m_gearTable.getNumberArray("width", defaultValue);
 		if (targetX.length != width.length) {
@@ -206,35 +207,51 @@ public class GearVision extends PIDSubsystem {
 			System.out.println("NetworkTable udpated in the middle of getRawTargetData; may have inconsistent datapoints!");
 		}
 		// Choose the first object, if one was found.
-    	if (targetX.length==0) {
+    	if (targetX.length<2) {
     		// We didn't find a valid x position to use.
     		// Return a perfectly centered answer so that the system doesn't try to adapt
     		// We also have to compensate for offset between the camera image and the actual robot.
-    		xPos = ((m_xRes/2) + SmartDashboard.getNumber("Gear Center Offset (pixels)", m_targetCenterOffset));
+    		System.out.println("Punting on XPos!");
+    		xPos[0] = (((m_xRes/2) + SmartDashboard.getNumber("Gear Center Offset (pixels)", m_targetCenterOffset))) - 39;
+    		xPos[1] = (((m_xRes/2) + SmartDashboard.getNumber("Gear Center Offset (pixels)", m_targetCenterOffset))) + 39;
     	}
     	else {
-    		xPos = targetX[0]; // Use the first Xposition value
+    		// Grab only the first two (in case there are >2?)
+    		xPos[0] = targetX[0];
+    		xPos[1] = targetX[1];
     	}
-    	if (width.length==0) {
-    		// No valid width.  punt and set the width to some value that matches what we'd see in auto firing from the hopper...
-    		xWid = 10; // This is an arbitrary choice until we measure it.
+    	if (width.length<2) {
+    		// No valid width.  punt and set the width to some value that matches what we'd see from our desired starting position...
+    		System.out.println("Punting on xWid!");
+    		xWid[0] = 22; // This is an arbitrary choice until we measure it.
+    		xWid[1] = 22;
     	}
     	else {
-    		xWid = width[0]; // Use the first width value
+    		 // Grab only the first two (in case there are >2?)
+    		xWid[0] = width[0];
+    		xWid[1] = width[1];
     	}
 	    	
 	    	
     	// For initial debug, just print out the table so we can see what's going on
-/*
-    	System.out.print("centerX: ");
+
+    	System.out.print("Raw centerX: ");
     	for (double xval : targetX) { // for each target found,
     		System.out.print(xval + " ");
     	}
+    	System.out.print(" Raw width: ");
+    	for (double xwid : targetX) { // for each target found,
+    		System.out.print(width + " ");
+    	}
+    	System.out.print("\nCalculated xPos and xWid: ");
+    	for (int i=0; i<=1; i++) {
+    		System.out.print("xPos[" + i + "] = " + xPos[i] + " xWid[" + i + "] = " + xWid[i]);
+    	}
     	System.out.println();
-*/    	
+   	
     	
 	    // Return an array of the answers
-	    double[] rawData = {xPos, xWid};
+	    double[][] rawData = {{xPos[0], xPos[1]}, {xWid[0], xWid[1]}};
 	    return rawData;
      }
 

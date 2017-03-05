@@ -56,7 +56,7 @@ public class TurretWithJoystick extends Command {
 		turretTarget = (turretTarget * (Robot.turret.getRightLimit() - Robot.turret.getLeftLimit())); // scale to the legal rotation range
 		turretTarget = turretTarget + Robot.turret.getLeftLimit(); // and shift to match left limit in case it's nonzero.
     	
-		System.out.println("Turret setpoint calculated to be " + turretTarget);
+		//System.out.println("Turret setpoint calculated to be " + turretTarget);
 		if (false) {
 			// Use the PID to direct the turret
 			RobotMap.turretTurretTurner.set(turretTarget); // target is in terms of an absolute rotation between left and right limits
