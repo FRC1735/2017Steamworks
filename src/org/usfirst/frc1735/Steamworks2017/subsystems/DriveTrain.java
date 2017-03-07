@@ -546,11 +546,11 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     
     // Hardware PID related variables
     TalonControlMode m_savedTalonMode = TalonControlMode.PercentVbus; // I think this is the right mode for normal driving.
-	static final double m_gearErrVal = (0.5)/(3.1415927*4);
+	static final double m_gearErrVal = (0.5)/(3.1415927*3.95);
     
     // wheel distance per revolution should be circumference, but should empirically verified.
     // We are SWAGging that crabbing will be sqrt2/2 factor off this.
-    public static final double m_inchesPerRevolution = 3.1415927*4; // for starters, use circumference of 4" wheel
+    public static final double m_inchesPerRevolution = 3.1415927*3.95; // for starters, use circumference of 4" wheel
 
 }
 

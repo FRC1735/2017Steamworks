@@ -107,8 +107,8 @@ public class Robot extends IterativeRobot {
         System.out.println("About to create Autonomous Chooser");
         autoChooser = new SendableChooser();
         // Provide the available choices
-        autoChooser.addDefault("Do Nothing",  new AutonomousDoNothing());
-        autoChooser.addObject("Experimental", new AutonomousExperiment());
+        autoChooser.addObject("Do Nothing",  new AutonomousDoNothing());
+        autoChooser.addDefault("Experimental", new AutonomousExperiment());
         // Add the chooser widget to the dashboard
         SmartDashboard.putData("Autonomous Mode Chooser", autoChooser);
                 

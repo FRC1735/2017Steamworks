@@ -75,6 +75,19 @@ public class DriveWithProgram extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
+    	System.out.println("Entering DriveWithProgram");
+    	// if we are calling this during a GearVision event, grab the crab distance/magnitude from the GearVision object
+        if (Robot.gearVision.isVisionEnabled()) {
+        	// if we are calling this during a GearVision event, grab the crab distance/magnitude from the GearVision object
+        	m_crabDist = Robot.gearVision.getErrorDistanceVal();
+        	if (m_crabDist < 0) {
+        			m_crabMagDir = -0.5;
+        			m_crabDist = -m_crabDist; // Make the distance positive.
+        	}
+        	else
+        			m_crabMagDir = 0.5;
+        }
+        
     	// Sanity check the args.
     	// For instance, setting mode to traction and asking for Crab is not legal
     	if ((m_mode == DriveTrain.DrivetrainMode.kTraction) &&

@@ -39,13 +39,13 @@ public class BoilerCameraLight extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
+    	// polarity/definition of the input state is a parameter in the RobotBuilder entry for this command.
+    	// Current implementation is true=on.
+    	Robot.turret.cameraLightOn(m_state);
     }
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
-    	// polarity/definition of the input state is a parameter in the RobotBuilder entry for this command.
-    	// Current implementation is true=on.
-    	Robot.turret.cameraLightOn(m_state);
     }
 
     // Make this return true when this Command no longer needs to run execute()

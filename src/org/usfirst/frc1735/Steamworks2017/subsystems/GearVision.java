@@ -103,6 +103,10 @@ public class GearVision extends PIDSubsystem {
         // Populate the centerpoint value on the SmartDashboard (for tuning)
         SmartDashboard.putNumber("Gear Center Offset (pixels)", m_targetCenterOffset);
         
+	    // Get a pointer to the networkTable.  "GearVision" is the name we entered into the publish box in GRIP
+	    m_gearTable = NetworkTable.getTable("GRIP/GearVision");
+        System.out.println("GearVision table handle is " + m_gearTable);
+        
     }
     
 
@@ -173,14 +177,25 @@ public class GearVision extends PIDSubsystem {
     	double xPos[] = rawData[0]; // Target offset from center in pixels
     	double xWidArr[] = rawData[1]; // Target width in pixels
     	
+    	// The width of the full rectangle defined by the two tape targets is the difference in centerpoints of the two targets, plus half the width of the left and right targets.
     	double xWid = Math.abs(xPos[1]-xPos[0]) + xWidArr[0]/2 + xWidArr[1]/2;
-    	double imageErrorDistance = (Math.abs(xPos[1]-xPos[0])/2 + Math.min(xPos[0],  xPos[1])) - desiredCenter; // Make errors to the right of center be positive
+    	// The center of the full rectangle is the average of the two centerpoints:
+    	double imageCenter = (xPos[0] + xPos[1])/2;
+    	// (Alternatively, could do a difference between them and add to the left centerpoint, but that's not as simple.)
+    	//double imageCenter = (Math.abs(xPos[1]-xPos[0])/2 + Math.min(xPos[0],  xPos[1]));
+    	double imageErrorDistance = imageCenter - desiredCenter; // Make errors to the right of center be positive
     	
     	// Using similar triangles and ratios...
     	// The ratio of the (camera image of the target width in pixels) to the (real width in inches) 
     	// should be the same as the ratio of the (camera image center offset ["error distance"] in pixels) vs (offset in inches)
     	// Therefore:
-    	return ((imageErrorDistance* m_targetWidthInches)/xWid);
+    	double inchErrorDistance = ((imageErrorDistance* m_targetWidthInches)/xWid);
+    	System.out.println("Calculated error in inches is " + inchErrorDistance + "desired center " + desiredCenter + "Image center" + imageCenter + "width " + xWid + "Image error in pix " + imageErrorDistance);
+    	
+    	// Find the distance
+    	double distance = calculateDistanceFromCamera(xWid);
+    	System.out.println("distance = " + distance);
+    	return inchErrorDistance;
     	
     }
     
@@ -188,8 +203,11 @@ public class GearVision extends PIDSubsystem {
     // [0]: the pixel position of the center of the target's X axis
     // [1]: the width of the target (total width)
     public double[][] getRawTargetData() {
-    	double xPos[] = new double [0];
-    	double xWid[] = new double [0]; // components of our return value
+    	double xPos[];// = new double {0,0};
+    	double xWid[];// = new double {0,0}; // components of our return value
+
+    	xPos = new double[] {0,0};
+    	xWid = new double[] {0,0};
     	
     	// 1) Get the current list of targets found.  There might be more than one visible at a time if our processing is noisy,
     	//    or if we can't combine the two tape strips into a single blob on the coprocessor
@@ -200,6 +218,22 @@ public class GearVision extends PIDSubsystem {
     	double[] defaultValue = new double[] {0,0}; // set up a default value in case the table isn't published yet
     	double[] targetX = m_gearTable.getNumberArray("centerX", defaultValue);    	
 		double[] width = m_gearTable.getNumberArray("width", defaultValue);
+    	// For initial debug, just print out the table so we can see what's going on
+
+		int a = targetX.length;
+		int b = width.length;
+		System.out.println("targetX length is " + a + " and width length is "+ b);
+    	System.out.print("Raw centerX: ");
+    	for (double xval : targetX) { // for each target found,
+    		System.out.print(xval + " ");
+    	}
+    	System.out.print(" Raw width: ");
+    	for (double xwid : width) { // for each target found,
+    		System.out.print(xwid + " ");
+    	}
+    	System.out.println("");
+
+		
 		if (targetX.length != width.length) {
 			// here the table updated in the middle; we'll have to punt.
 			// (Yes, it could have updated to the same number of objects, but different objects.  There is no way to detect that at all)
@@ -233,16 +267,6 @@ public class GearVision extends PIDSubsystem {
     	}
 	    	
 	    	
-    	// For initial debug, just print out the table so we can see what's going on
-
-    	System.out.print("Raw centerX: ");
-    	for (double xval : targetX) { // for each target found,
-    		System.out.print(xval + " ");
-    	}
-    	System.out.print(" Raw width: ");
-    	for (double xwid : targetX) { // for each target found,
-    		System.out.print(width + " ");
-    	}
     	System.out.print("\nCalculated xPos and xWid: ");
     	for (int i=0; i<=1; i++) {
     		System.out.print("xPos[" + i + "] = " + xPos[i] + " xWid[" + i + "] = " + xWid[i]);
@@ -289,7 +313,16 @@ public class GearVision extends PIDSubsystem {
     	// Print the new state of the light to the SmartDashboard
 		SmartDashboard.putBoolean("Gear Camera Light On", onState);
     }
-
+    
+    // Backup plan:  USe vision to get the error distance, and use DriveWithProgram to move the desired amount.
+    // To do this, we need to store off the requested distance
+    public void setErrorDistanceVal(double errorDistance) {
+    	m_errorDistance = errorDistance;
+    }
+    public double getErrorDistanceVal() {
+    	return m_errorDistance;
+    }
+    
     //----------------------------------
     // Member Variables
     //----------------------------------
@@ -307,5 +340,6 @@ public class GearVision extends PIDSubsystem {
 	// You can determine this empirically by getting the robot to shoot perfectly and then reading the raw Xpos from the vision system...
 	// (This can be overridden by the SmartDashboard)
 	private static double m_targetCenterOffset = 0;    //(+1 means the robot is really centered when the image center is 1 pixel to the right of dead center xRes/2)
+	private double m_errorDistance = 0;
 
 }
