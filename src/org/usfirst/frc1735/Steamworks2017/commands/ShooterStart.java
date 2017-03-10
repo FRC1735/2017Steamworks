@@ -48,7 +48,7 @@ public class ShooterStart extends Command {
     	///double currentSetpoint = SmartDashboard.getNumber("ShooterRPM",0); // Default to zero if no entry found
     	///Robot.shooter.operate(currentSetpoint); // Tell the ShooterPID to go to this speed
     	
-    	System.out.println("Shooting");
+    	//System.out.println("Shooting");
     	Robot.shooter.directDrive(1);
     }
 

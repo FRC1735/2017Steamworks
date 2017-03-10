@@ -111,8 +111,8 @@ public class DriveWithProgram extends Command {
     	m_angleReached     = false;
 
     	// All program control assumes that we are the RED alliance (boiler is to the drivers' right).
-    	// If we are the BLUE alliance, angles and crab need to be negated!
-    	if (Robot.m_alliance == DriverStation.Alliance.Blue) {
+    	// If we are the BLUE alliance, angles and crab need to be negated! (Unless we are centering on a gear, of course)
+    	if ((Robot.m_alliance == DriverStation.Alliance.Blue)&& (!Robot.gearVision.isVisionEnabled())) {
     		m_turnAngle = -m_turnAngle;
     		m_crabMagDir = -m_crabMagDir;
     	}
@@ -233,8 +233,8 @@ public class DriveWithProgram extends Command {
     		 BRDriveTravel = BRDriveTravel * 0.5;
     	}
    		
-    	if (++m_loopcnt%25 == 0)
-    		System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
+    	///if (++m_loopcnt%25 == 0)
+    	///	System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
     	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
     	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
@@ -268,7 +268,7 @@ public class DriveWithProgram extends Command {
     	
     	// IF we specified no angle, then the PID was trying to keep us on a constant heading an onTarget() is still valid to look at.
     	boolean angleReached = Robot.driveTrain.drivelineController.onTarget();
-    	System.out.println ("Timedout = " + timedOut + " driveDistReached = " + driveDistReached + " angleReached = " + angleReached + " AngleError =" + Robot.driveTrain.drivelineController.getAvgError()); 
+    	//System.out.println ("Timedout = " + timedOut + " driveDistReached = " + driveDistReached + " angleReached = " + angleReached + " AngleError =" + Robot.driveTrain.drivelineController.getAvgError()); 
     			
     	m_driveDistReached= driveDistReached;
     	m_crabDistReached= crabDistReached;

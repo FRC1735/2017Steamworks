@@ -189,7 +189,11 @@ public class GearVision extends PIDSubsystem {
     	// The ratio of the (camera image of the target width in pixels) to the (real width in inches) 
     	// should be the same as the ratio of the (camera image center offset ["error distance"] in pixels) vs (offset in inches)
     	// Therefore:
-    	double inchErrorDistance = ((imageErrorDistance* m_targetWidthInches)/xWid);
+    	double inchErrorDistance;
+    	if (xWid==0)
+    		inchErrorDistance = 0;
+    	else
+    		inchErrorDistance = ((imageErrorDistance* m_targetWidthInches)/xWid);
     	System.out.println("Calculated error in inches is " + inchErrorDistance + "desired center " + desiredCenter + "Image center" + imageCenter + "width " + xWid + "Image error in pix " + imageErrorDistance);
     	
     	// Find the distance
@@ -339,7 +343,7 @@ public class GearVision extends PIDSubsystem {
 	// This is the offset (in PIXELS) that we need to compensate between the camera center and the robot shooting centered.
 	// You can determine this empirically by getting the robot to shoot perfectly and then reading the raw Xpos from the vision system...
 	// (This can be overridden by the SmartDashboard)
-	private static double m_targetCenterOffset = 0;    //(+1 means the robot is really centered when the image center is 1 pixel to the right of dead center xRes/2)
+	private static double m_targetCenterOffset = -78;    //(+1 means the robot is really centered when the image center is 1 pixel to the right of dead center xRes/2)
 	private double m_errorDistance = 0;
 
 }
