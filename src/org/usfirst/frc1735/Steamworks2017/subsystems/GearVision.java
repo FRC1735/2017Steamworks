@@ -343,7 +343,7 @@ public class GearVision extends PIDSubsystem {
 	// This is the offset (in PIXELS) that we need to compensate between the camera center and the robot shooting centered.
 	// You can determine this empirically by getting the robot to shoot perfectly and then reading the raw Xpos from the vision system...
 	// (This can be overridden by the SmartDashboard)
-	private static double m_targetCenterOffset = -78;    //(+1 means the robot is really centered when the image center is 1 pixel to the right of dead center xRes/2)
+	private static double m_targetCenterOffset = -59;    //(+1 means the robot is really centered when the image center is 1 pixel to the right of dead center xRes/2)
 	private double m_errorDistance = 0;
 
 }

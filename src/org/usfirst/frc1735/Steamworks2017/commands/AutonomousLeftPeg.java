@@ -71,13 +71,18 @@ public class AutonomousLeftPeg extends CommandGroup {
     	// Spear the peg
     	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kMecanum,
 				3, // timeout
-				0.375,76, // drive MagDir, dist
+				0.375,70, // drive MagDir, dist
 				0,0, // crab:  Data will come from SetGearPegErrorDistance() above!
 				0)); // Angle to turn
-    	// Back up a bit so gear peg clears the climber
+       	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kMecanum,
+    				3, // timeout
+    				0.25,6, // drive MagDir, dist
+    				0,0, // crab:  Data will come from SetGearPegErrorDistance() above!
+    				0)); // Angle to turn
+        	// Back up a bit so gear peg clears the climber
     	addSequential(new DriveWithProgram(DriveTrain.DrivetrainMode.kMecanum,
 				3, // timeout
-				-.375,0.75, // drive MagDir, dist
+				-.2,0.75, // drive MagDir, dist
 				0,0, // crab:  Data will come from SetGearPegErrorDistance() above!
 				0)); // Angle to turn
 

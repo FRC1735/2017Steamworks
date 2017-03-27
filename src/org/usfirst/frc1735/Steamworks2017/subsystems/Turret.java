@@ -64,11 +64,13 @@ public class Turret extends Subsystem {
     // Example taken from CTRE github PositionClosedLoop
     // WE don't want to do this at construction time, so make RobotInit() call this function.
     public void turretInit() {
-    	if (false) {
-    	// Choose the sensor and sensor dirction
     	turretTurner.setFeedbackDevice(FeedbackDevice.AnalogEncoder);
     	turretTurner.reverseSensor(false); //Assume no inversion at this time.
     	turretTurner.configPotentiometerTurns(1); // Assume a 1:1 ratio of turret to encoder rotations
+    	//turretTurner.configEncoderCodesPerRev(1024);
+
+    	if (false) {
+    	// Choose the sensor and sensor dirction
     	turretTurner.configNominalOutputVoltage(+0f,  -0f);
     	turretTurner.configPeakOutputVoltage(+12f,  -12f);
     	
@@ -288,8 +290,8 @@ public class Turret extends Subsystem {
     }
     
     // Accessors for turret Commands like TurretWithJoystick.  Units are in rotations
-    public double getLeftLimit() { return m_reverseSoftLimit; }
-    public double getRightLimit() { return m_forwardSoftLimit; }
+    public double getLeftLimit() { return /*m_reverseSoftLimit*/m_leftLimit; }
+    public double getRightLimit() { return /*m_forwardSoftLimit*/m_rightLimit; }
 
     public void cameraLightOn(boolean onState) {
     	// If onState is true, turn the camera light relay on.
@@ -299,12 +301,25 @@ public class Turret extends Subsystem {
 		SmartDashboard.putBoolean("Boiler Camera Light On", onState);
     }
 
+    public double getPosition() {
+    	//double analogIn = turretTurner.getAnalogInPosition();
+    	//double get = turretTurner.get();
+    	//double getPosition = 0;//turretTurner.getPosition();?????
+    	double analogInRaw = turretTurner.getAnalogInRaw();
+    	//double getEncPosition = turretTurner.getEncPosition();
+    	
+		//System.out.println("Turret analogIn: " + analogIn + " get: " + get + " getPosition: " + getPosition + " analogInRaw: " + analogInRaw + " getEncPosition: " + getEncPosition);
+		return analogInRaw;	
+    }
+    
     //----------------------------------
     // Member Variables
     //----------------------------------
     private boolean m_visionEnabled = false; // Is the turret active?
-    private double m_reverseSoftLimit = 0.0; // Soft limit in rotations
+    private double m_reverseSoftLimit = 0.0; // Soft limit in rotations.  This is the left-side limit
     private double m_forwardSoftLimit = 30/360; // Assume 30 degree max, with left side at zero.
+    private double m_leftLimit = 221; // Soft stop encoder value
+    private double m_rightLimit = 312; // Soft stop encoder value
 	NetworkTable m_boilerTable;
     StringBuilder m_sb = new StringBuilder(); // class for building up strings across multiple code lines
 	

@@ -538,7 +538,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     /* controllers by displaying a form where you can enter new P, I,  */
     /* and D constants and test the mechanism.                         */
     
-    static final double kP = 0.03;
+    static final double kP = 0.035;
     static final double kI = 0.00;
     static final double kD = 0.00;
     static final double kF = 0.00;

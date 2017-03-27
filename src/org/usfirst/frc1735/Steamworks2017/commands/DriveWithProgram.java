@@ -11,6 +11,7 @@
 
 package org.usfirst.frc1735.Steamworks2017.commands;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import org.usfirst.frc1735.Steamworks2017.Robot;
 import org.usfirst.frc1735.Steamworks2017.RobotMap;
@@ -41,7 +42,8 @@ public class DriveWithProgram extends Command {
 	private double m_FRStartRotation; // Front Right
 	private double m_BLStartRotation; // Back Left
 	private double m_BRStartRotation; // Back Right
-
+	private double m_startTime; // Beginning real-time clock val
+	
 	// Saved versions of each component of the drive vector for use in execute ()
 	private boolean m_driveDistReached;
 	private boolean m_crabDistReached;
@@ -112,9 +114,15 @@ public class DriveWithProgram extends Command {
 
     	// All program control assumes that we are the RED alliance (boiler is to the drivers' right).
     	// If we are the BLUE alliance, angles and crab need to be negated! (Unless we are centering on a gear, of course)
-    	if ((Robot.m_alliance == DriverStation.Alliance.Blue)&& (!Robot.gearVision.isVisionEnabled())) {
+    	//if ((/*Robot.m_alliance*/ DriverStation.getInstance().getAlliance() == DriverStation.Alliance.Blue)&& (!Robot.gearVision.isVisionEnabled())) {
+    	if (Robot.m_isBlue) {// Robot.allianceChooser.getSelected().toString().equals("Blue")) {
+    	//if (false) { // Hard code for blue
+    		System.out.println("DriveWithProgram thinks alliance color is Blue");
     		m_turnAngle = -m_turnAngle;
     		m_crabMagDir = -m_crabMagDir;
+    	}
+    	else {
+    		System.out.println("DriveWithProgram thinks alliance color must be Red");
     	}
     	
     	// Get the initial values for all driveline encoders.  This value is in rotations.
@@ -125,7 +133,7 @@ public class DriveWithProgram extends Command {
     	
     	// Print intial encoder values (should be in revolutions)
     	System.out.println("Initial:  ReqDist = " + m_driveDist + " FL = " + m_FLStartRotation + " FR = " + m_FRStartRotation + " BL = " + m_BLStartRotation + " BR = " + m_BRStartRotation);
-    	System.out.println("crabDist = " + m_crabDist);
+    	System.out.println("crabDist = " + m_crabDist + " crabMagDir = " + m_crabMagDir);
     	// Get the initial Gyro heading
     	double rawInitialGyroAngle = Robot.ahrs.getAngle();
     	System.out.println("initial getAngle is " + rawInitialGyroAngle);
@@ -171,7 +179,9 @@ public class DriveWithProgram extends Command {
     	// Finally, enable the turn controller
     	Robot.driveTrain.drivelineController.setSetpoint(absoluteTargetGyroAngle);	
     	Robot.driveTrain.drivelineController.enable();
-   	
+    	// Grab the real-time clock value at this point
+    	m_startTime = Timer.getFPGATimestamp();
+
    }
 
     // Called repeatedly when this Command is scheduled to run
@@ -195,6 +205,13 @@ public class DriveWithProgram extends Command {
     		driveMagDir=m_driveMagDir;
     	}
        	
+    	// For the first 0.25 seconds of driving, run at 50% of the requested speed
+    	double currentTime = Timer.getFPGATimestamp();
+    	double elapsedTime = Math.round((currentTime - m_startTime) * 1000); // Compute elapsed time in milliseconds
+    	if (elapsedTime < 250) {
+    		//driveMagDir = driveMagDir * 0.5;
+    	}
+
     	// Use mode bit to determine which driveline mode to use to accomplish the PID output reaction
     	if (m_mode == DriveTrain.DrivetrainMode.kMecanum) {
 
@@ -233,8 +250,8 @@ public class DriveWithProgram extends Command {
     		 BRDriveTravel = BRDriveTravel * 0.5;
     	}
    		
-    	///if (++m_loopcnt%25 == 0)
-    	///	System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
+    	if (++m_loopcnt%25 == 0)
+    		System.out.println("ReqDist = " + m_driveDist + " Current distance traveled (inches):  FL=" + FLDriveTravel + " FR=" + FRDriveTravel + "BL=" + BLDriveTravel + " BR=" + BRDriveTravel);
     	
     	// From travel, determine if we reached the drive distance limit on ANY encoder.
     	// We want some redundancy in case one encoder fails (i.e. wires get ripped out)
@@ -245,8 +262,10 @@ public class DriveWithProgram extends Command {
     	int BLDriveReached = (BLDriveTravel >= m_driveDist)?1:0;
     	int BRDriveReached = (BRDriveTravel >= m_driveDist)?1:0;
     	
-    	boolean driveDistReached = ((FLDriveReached + FRDriveReached + BLDriveReached + BRDriveReached) >= 2);
+    	//boolean driveDistReached = ((FLDriveReached + FRDriveReached + BLDriveReached + BRDriveReached) >= 2);
     	//System.out.println("Reached: Answer = " + driveDistReached + " FL "+ FLDriveReached + " FR "+ FRDriveReached + " BL "+ BLDriveReached + " BR " + BRDriveReached);
+    	// Change to both back sensors, because the front slip a lot due to the weight of the turret on the back of the robot
+    	boolean driveDistReached = ((BLDriveReached + BRDriveReached) == 2);
     	
     	// From travel, determine if we reached the crab distance limit
     	// This is tougher because wheels spin in opposite directions!
@@ -286,6 +305,11 @@ public class DriveWithProgram extends Command {
     	//Robot.ahrs.setAngleAdjustment(0);
     	//System.out.println("Unadjusted angle is: " + Robot.ahrs.getAngle());
     	
+    	// If we inverted the drive direction for 'blue", put it back to the "red" default.  This allows us to run autonomous multiple times in the pits without restarting/reinitializing robot code...
+    	if (Robot.m_isBlue ) { //Robot.allianceChooser.getSelected().toString().equals("Blue")) {
+    		m_turnAngle = -m_turnAngle;
+    		m_crabMagDir = -m_crabMagDir;
+    	}
     }
 
     // Called when another command which requires one or more of the same
