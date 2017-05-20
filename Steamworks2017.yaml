@@ -177,7 +177,7 @@ Children:
           default: '0'
           name: Output Channel (Solenoid)
           validators: *id004
-          value: '1'
+          value: '3'
         Output PCM (Solenoid): !!robotbuilder.data.properties.ChoicesProperty
           choices: *id005
           default: '0'
@@ -240,18 +240,6 @@ Children:
   - Children:
     - Children: []
       Properties:
-        Sensitivity: !!robotbuilder.data.properties.DoubleProperty {default: 0.007,
-          name: Sensitivity, validators: null, value: 0.007}
-        Input Channel (Analog): !!robotbuilder.data.properties.ChoicesProperty
-          choices: ['0', '1']
-          default: '0'
-          name: Input Channel (Analog)
-          validators: [AnalogInput]
-          value: '1'
-      Base: AnalogGyro
-      Name: FakeCameraGyro
-    - Children: []
-      Properties:
         Type: !!robotbuilder.data.properties.ChoicesProperty
           choices: &id007 [Victor, Jaguar, Talon, VictorSP, TalonSRX, Spark, SD540]
           default: Talon
@@ -267,6 +255,18 @@ Children:
           value: '19'
       Base: Speed Controller
       Name: FakeMotor
+    - Children: []
+      Properties:
+        Sensitivity: !!robotbuilder.data.properties.DoubleProperty {default: 0.007,
+          name: Sensitivity, validators: null, value: 0.007}
+        Input Channel (Analog): !!robotbuilder.data.properties.ChoicesProperty
+          choices: ['0', '1']
+          default: '0'
+          name: Input Channel (Analog)
+          validators: [AnalogInput]
+          value: '1'
+      Base: AnalogGyro
+      Name: FakeCameraGyro
     - Children: []
       Properties:
         Output Channel (Solenoid): !!robotbuilder.data.properties.ChoicesProperty
@@ -430,6 +430,50 @@ Children:
         value: []
     Base: Subsystem
     Name: PopTart
+  - Children:
+    - Children: []
+      Properties:
+        Input Channel (Digital): !!robotbuilder.data.properties.ChoicesProperty
+          choices: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+            '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23',
+            '24', '25']
+          default: '0'
+          name: Input Channel (Digital)
+          validators: [DigitalChannel]
+          value: '0'
+      Base: Limit Switch
+      Name: BannerSensor
+    - Children: []
+      Properties:
+        Output Channel (Solenoid): !!robotbuilder.data.properties.ChoicesProperty
+          choices: *id003
+          default: '0'
+          name: Output Channel (Solenoid)
+          validators: *id004
+          value: '1'
+        Output PCM (Solenoid): !!robotbuilder.data.properties.ChoicesProperty
+          choices: *id005
+          default: '0'
+          name: Output PCM (Solenoid)
+          validators: *id006
+          value: '0'
+      Base: Solenoid
+      Name: GearPresenceRelay
+    Properties:
+      Default command parameters: !!robotbuilder.data.properties.ParametersProperty
+        default: []
+        name: Default command parameters
+        validators: null
+        value: []
+      Default Command: !!robotbuilder.data.properties.TypeSelectionProperty {default: None,
+        name: Default Command, type: Command, validators: null, value: MonitorGearPresence}
+      Constants: !!robotbuilder.data.properties.ConstantsProperty
+        default: []
+        name: Constants
+        validators: null
+        value: []
+    Base: Subsystem
+    Name: GearPresence
   Properties: {}
   Base: Subsystems
   Name: Subsystems
@@ -1534,14 +1578,59 @@ Children:
       Requires: !!robotbuilder.data.properties.TypeSelectionProperty {default: None,
         name: Requires, type: Subsystem, validators: null, value: Turret}
       Parameter presets: !!robotbuilder.data.properties.ParameterSetProperty
-        default: &id018 []
+        default: []
+        name: Parameter presets
+        validators: null
+        value: []
+      Button on SmartDashboard: !!robotbuilder.data.properties.BooleanProperty {default: true,
+        name: Button on SmartDashboard, validators: null, value: false}
+    Base: Command
+    Name: TurretWithLimits
+  - Children: []
+    Properties:
+      Parameters: !!robotbuilder.data.properties.ParametersProperty
+        default: []
+        name: Parameters
+        validators: null
+        value:
+        - !!robotbuilder.data.properties.ParameterDescriptor {name: state, type: boolean}
+      Requires: !!robotbuilder.data.properties.TypeSelectionProperty {default: None,
+        name: Requires, type: Subsystem, validators: null, value: GearPresence}
+      Parameter presets: !!robotbuilder.data.properties.ParameterSetProperty
+        default: &id018
+        - !!robotbuilder.data.properties.ParameterSet
+          name: 'off'
+          parameters:
+          - {name: state, type: boolean, value: 'false'}
+        - !!robotbuilder.data.properties.ParameterSet
+          name: 'on'
+          parameters:
+          - {name: state, type: boolean, value: 'true'}
         name: Parameter presets
         validators: null
         value: *id018
       Button on SmartDashboard: !!robotbuilder.data.properties.BooleanProperty {default: true,
         name: Button on SmartDashboard, validators: null, value: false}
     Base: Command
-    Name: TurretWithLimits
+    Name: GearPresenceLight
+  - Children: []
+    Properties:
+      Parameters: !!robotbuilder.data.properties.ParametersProperty
+        default: []
+        name: Parameters
+        validators: null
+        value: []
+      Requires: !!robotbuilder.data.properties.TypeSelectionProperty {default: None,
+        name: Requires, type: Subsystem, validators: null, value: GearPresence}
+      Parameter presets: !!robotbuilder.data.properties.ParameterSetProperty
+        default: &id019 []
+        name: Parameter presets
+        validators: null
+        value: *id019
+      Button on SmartDashboard: !!robotbuilder.data.properties.BooleanProperty {default: true,
+        name: Button on SmartDashboard, validators: null, value: false}
+    Base: Command
+    Name: MonitorGearPresence
   Properties: {}
   Base: Commands
   Name: Commands

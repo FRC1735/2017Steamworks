@@ -115,7 +115,7 @@ public class DriveWithProgram extends Command {
     	// All program control assumes that we are the RED alliance (boiler is to the drivers' right).
     	// If we are the BLUE alliance, angles and crab need to be negated! (Unless we are centering on a gear, of course)
     	//if ((/*Robot.m_alliance*/ DriverStation.getInstance().getAlliance() == DriverStation.Alliance.Blue)&& (!Robot.gearVision.isVisionEnabled())) {
-    	if (Robot.m_isBlue) {// Robot.allianceChooser.getSelected().toString().equals("Blue")) {
+    	if (Robot.allianceChooser.getSelected().toString().equals("Blue")) { //Robot.m_isBlue
     	//if (false) { // Hard code for blue
     		System.out.println("DriveWithProgram thinks alliance color is Blue");
     		m_turnAngle = -m_turnAngle;
