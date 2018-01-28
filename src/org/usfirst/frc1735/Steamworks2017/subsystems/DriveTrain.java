@@ -97,6 +97,112 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     		return null;
     	}
     }
+    public void motionMagicInit() {
+    	// This function puts the drivetrain in Motion Magic control mode.
+    	// this allows us to use the Talon HW PID for positional control,
+    	// while still obeying the trapezoidal motion profile for acceleration
+    	// and maximum velocity.
+    	
+    	// See full code example at https://github.com/CrossTheRoadElec/FRC-Examples-STEAMWORKS/blob/master/JAVA_MotionMagicExample/src/org/usfirst/frc/team217/robot/Robot.java
+    	
+        // Motors on left side need to be inverted by the talon (not WPILIB) for
+        // the PID feedback to operate correctly
+        fLMotor.reverseOutput(true);
+        bLMotor.reverseOutput(true);
+
+        // Chose the sensor and direction
+    	fLMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+    	fLMotor.configEncoderCodesPerRev(1024); //CTRE_MAG says 4096 but that's with internal 4x upscale
+    	fLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
+    	fRMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	fRMotor.reverseSensor(false); //Assume no inversion at this time.
+    	bLMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	bLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
+    	bRMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
+    	bRMotor.reverseSensor(false); //Assume no inversion at this time.
+
+    	// Encoder setup:  Since we are using the CTRE Mag Encoders, we do not
+    	// need to configure anything further
+		/* set the peak and nominal outputs, 12V means full (even if battery voltage is higher)*/
+    	fLMotor.configNominalOutputVoltage(+0f, -0f);
+    	fLMotor.configPeakOutputVoltage(+12.0f, -12.0f);
+    	fRMotor.configNominalOutputVoltage(+2.5f, -2.5f);
+    	fRMotor.configPeakOutputVoltage(+12.0f, -12.0f);
+    	bLMotor.configNominalOutputVoltage(+2.5f, -2.5f);
+    	bLMotor.configPeakOutputVoltage(+12.0f, -12.0f);
+    	bRMotor.configNominalOutputVoltage(+2.5f, -2.5f);
+    	bRMotor.configPeakOutputVoltage(+12.0f, -12.0f);
+    	
+
+    	/* set closed loop gains in slot0 - see documentation */
+    	fLMotor.setProfile(0);
+    	fRMotor.setProfile(0);
+    	bLMotor.setProfile(0);
+    	bRMotor.setProfile(0);
+    	
+    	fLMotor.setF(0);//.30897);
+    	fRMotor.setF(0);//.30897);
+    	bLMotor.setF(0);//.30897);
+    	bRMotor.setF(0);//.30897);
+    	
+    	fLMotor.setP(1.0);
+    	fRMotor.setP(1.0);
+    	bLMotor.setP(1.0);
+    	bRMotor.setP(1.0);
+    	
+    	fLMotor.setI(0);
+    	fRMotor.setI(0);
+    	bLMotor.setI(0);
+    	bRMotor.setI(0);
+    	
+    	fLMotor.setD(0);
+    	fRMotor.setD(0);
+    	bLMotor.setD(0);
+    	bRMotor.setD(0);
+    	
+		/* set acceleration and vcruise velocity - see documentation */
+    	fLMotor.setMotionMagicCruiseVelocity(0); // In RPM.  Top speed is 5310 no-load * (14/50) * (14*50) = 416RPM
+    	fRMotor.setMotionMagicCruiseVelocity(0);
+    	bLMotor.setMotionMagicCruiseVelocity(0);
+    	bRMotor.setMotionMagicCruiseVelocity(0);
+    	
+    	fLMotor.setMotionMagicAcceleration(0); //In RPM/sec.  assume near-top-RPM top speed, and 1 second to accel, we want 400/RPM/sec
+    	fRMotor.setMotionMagicAcceleration(0);
+    	bLMotor.setMotionMagicAcceleration(0);
+    	bRMotor.setMotionMagicAcceleration(0);
+    	
+    	// Put the talons in "Brake" mode
+    	fLMotor.enableBrakeMode(true);
+    	fRMotor.enableBrakeMode(true);
+    	bLMotor.enableBrakeMode(true);
+    	bRMotor.enableBrakeMode(true);
+   	
+    	//Set the mode to Magic (for the master; slaves match for now)
+        fLMotor.changeControlMode(TalonControlMode.Position);//MotionMagic);
+        fRMotor.changeControlMode(TalonControlMode.MotionMagic);
+        bLMotor.changeControlMode(TalonControlMode.MotionMagic);
+        bRMotor.changeControlMode(TalonControlMode.MotionMagic);
+        // Followers do whatever master does:
+        //fLMotor.set(fLMotor.getDeviceID());
+        //bLMotor.set(fLMotor.getDeviceID());
+        //bRMotor.set(fLMotor.getDeviceID());
+        fLMotor.set(0);
+        fRMotor.set(0);
+        bLMotor.set(0);
+        bRMotor.set(0);
+        
+        // Zero out the relative sensors
+        fLMotor.setPosition(0);
+        fRMotor.setPosition(0);
+        bLMotor.setPosition(0);
+        bRMotor.setPosition(0);
+
+        // For testing only (when we drive only one of the four wheels)
+        fLMotor.setSafetyEnabled(false);
+        fRMotor.setSafetyEnabled(false);
+        bLMotor.setSafetyEnabled(false);
+        bRMotor.setSafetyEnabled(false);
+    }
     
     public void drivetrainInit() {
     	// Do initialization that cannot be done in the constructor because robot.init isn't executed yet so we don't have a gyro instance.
@@ -119,6 +225,10 @@ public class DriveTrain extends Subsystem implements PIDOutput {
         LiveWindow.addActuator("DriveSystem", "RotateController", drivelineController);
         
         //Initialize the motor controller (And encoder) hardware
+        // Motors on left side need to be inverted by the talon (not WPILIB) for
+        // the PID feedback to operate correctly
+        fLMotor.reverseOutput(true);
+        bLMotor.reverseOutput(true);
     	// Choose the sensor and sensor dirction
     	fLMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
     	fLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
@@ -508,10 +618,10 @@ public class DriveTrain extends Subsystem implements PIDOutput {
 
      public void setDriveMode() {
     	 // Return PID mode to the normal drive-by-joystick behavior:
-         fLMotor.changeControlMode(m_savedTalonMode);
-         fRMotor.changeControlMode(m_savedTalonMode);
-         bLMotor.changeControlMode(m_savedTalonMode);
-         bRMotor.changeControlMode(m_savedTalonMode);
+         fLMotor.changeControlMode(TalonControlMode.PercentVbus);
+         fRMotor.changeControlMode(TalonControlMode.PercentVbus);
+         bLMotor.changeControlMode(TalonControlMode.PercentVbus);
+         bRMotor.changeControlMode(TalonControlMode.PercentVbus);
 
          this.stop();
      }

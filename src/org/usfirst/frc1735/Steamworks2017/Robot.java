@@ -164,6 +164,10 @@ public class Robot extends IterativeRobot {
 
 		// For debug, display the scheduler on the smart dashboard so we can see what commands are actually running
 		SmartDashboard.putData(Scheduler.getInstance());
+		
+    	SmartDashboard.putNumber("Cruise SpeedDir", 450); // RPM units.  5310 no-load RPM * (14/50)*(14/50) gear ratio
+    	SmartDashboard.putNumber("Cruise Dist", 5); // Revolutions
+
 
     }
 

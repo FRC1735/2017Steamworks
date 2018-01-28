@@ -79,8 +79,7 @@ public class RobotMap {
         driveTrainRobotDrive41.setExpiration(0.1);
         driveTrainRobotDrive41.setSensitivity(0.5);
         driveTrainRobotDrive41.setMaxOutput(1.0);
-        driveTrainRobotDrive41.setInvertedMotor(RobotDrive.MotorType.kFrontLeft, true);
-        driveTrainRobotDrive41.setInvertedMotor(RobotDrive.MotorType.kRearLeft, true);
+
         driveTrainCompressor = new Compressor(0);
         
         
