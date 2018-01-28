@@ -167,6 +167,12 @@ public class Robot extends IterativeRobot {
 		
     	SmartDashboard.putNumber("Cruise SpeedDir", 450); // RPM units.  5310 no-load RPM * (14/50)*(14/50) gear ratio
     	SmartDashboard.putNumber("Cruise Dist", 5); // Revolutions
+    	SmartDashboard.putNumber("Cruise Accel", 1350); //1/3 sec to get to 450RPM
+    	SmartDashboard.putNumber("P", 0.995);
+    	SmartDashboard.putNumber("I", 0.005);
+    	SmartDashboard.putNumber("D", 0);
+    	SmartDashboard.putNumber("F", 0.30897);
+
 
 
     }
