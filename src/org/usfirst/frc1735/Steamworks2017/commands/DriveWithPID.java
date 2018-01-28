@@ -42,25 +42,56 @@ public class DriveWithPID extends Command {
     protected void initialize() {
     	//Set the driveline's Talons into MotionMagic mode
     	Robot.driveTrain.motionMagicInit();
-    	// Get the distance and speed from the SmartDashboard
-    	// (This function is for debug purposes only)
-    	m_magDir = SmartDashboard.getNumber("Cruise SpeedDir", 450); // RPM units.  5310 no-load RPM * (14/50)*(14/50) gear ratio
-    	RobotMap.driveTrainFLMotor.setMotionMagicCruiseVelocity(m_magDir);
-    	m_dist = SmartDashboard.getNumber("Cruise Dist", 5); // Rotations?
     	//setTimeout(3);// Set a timeout as a failsafe
+    	
+    	//PID for this command
+    	double p = SmartDashboard.getNumber("P", 1);
+    	double i = SmartDashboard.getNumber("I", 0);
+    	double d = SmartDashboard.getNumber("D", 0);
+    	double f = SmartDashboard.getNumber("F", 0.30897);
+    	RobotMap.driveTrainFLMotor.setPID(p, i, d);
+    	RobotMap.driveTrainFLMotor.setF(f);
+    	RobotMap.driveTrainFRMotor.setPID(p, i, d);
+    	RobotMap.driveTrainFRMotor.setF(f);
+    	RobotMap.driveTrainBLMotor.setPID(p, i, d);
+    	RobotMap.driveTrainBLMotor.setF(f);
+    	RobotMap.driveTrainBRMotor.setPID(p, i, d);
+    	RobotMap.driveTrainBRMotor.setF(f);
     }
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
     	//update the setpoint.
     	//Allow dynamic updates
+    	m_magDir = SmartDashboard.getNumber("Cruise SpeedDir", 450); // RPM units.  5310 no-load RPM * (14/50)*(14/50) gear ratio
+    	RobotMap.driveTrainFLMotor.setMotionMagicCruiseVelocity(m_magDir);
+    	RobotMap.driveTrainFRMotor.setMotionMagicCruiseVelocity(m_magDir);
+    	RobotMap.driveTrainBLMotor.setMotionMagicCruiseVelocity(m_magDir);
+    	RobotMap.driveTrainBRMotor.setMotionMagicCruiseVelocity(m_magDir);
+    	
+    	m_accel = SmartDashboard.getNumber("Cruise Accel", 1350); //full speed in 1/3 sec
+    	RobotMap.driveTrainFLMotor.setMotionMagicAcceleration(m_accel);
+    	RobotMap.driveTrainFRMotor.setMotionMagicAcceleration(m_accel);
+    	RobotMap.driveTrainBLMotor.setMotionMagicAcceleration(m_accel);
+    	RobotMap.driveTrainBRMotor.setMotionMagicAcceleration(m_accel);
+
     	m_dist = SmartDashboard.getNumber("Cruise Dist", 0); // Rotations?
     	RobotMap.driveTrainFLMotor.set(m_dist);
-    	//RobotMap.driveTrainFRMotor.set(m_dist);
-    	//RobotMap.driveTrainBLMotor.set(m_dist);
-    	//RobotMap.driveTrainBRMotor.set(m_dist);
+    	RobotMap.driveTrainFRMotor.set(m_dist);
+    	RobotMap.driveTrainBLMotor.set(m_dist);
+    	RobotMap.driveTrainBRMotor.set(m_dist);
         // Followers do whatever master does:
     	//RobotMap.driveTrainBRMotor.set(RobotMap.driveTrainFLMotor.getDeviceID());
+    	
+    	//Try to force ALL other motors to avoid safety errors...?
+    	RobotMap.gearVisionFakeMotor.set(0);
+        RobotMap.feederFeederMotor.set(0);
+        RobotMap.climberMotor.set(0);
+        RobotMap.feederFeederMotor.set(0);
+        RobotMap.climberMotor.set(0);
+        RobotMap.shooterShootMaster.set(0);
+        RobotMap.shooterShootFollower.set(0);
+
     	
     }
 
@@ -68,9 +99,20 @@ public class DriveWithPID extends Command {
     protected boolean isFinished() {
     	// Stop when the error is less than the tolerance... or we timed out
     	// Eventually, we can add bump/stall as abort conditions to this as well
-    	System.out.println("Setpoint: " + RobotMap.driveTrainFLMotor.getSetpoint() +
+/*    	System.out.println("Setpoint: " + RobotMap.driveTrainFLMotor.getSetpoint() +
     						" Current Pos: " + RobotMap.driveTrainFLMotor.getPosition() +
-    						" CL Err: " + RobotMap.driveTrainFLMotor.getClosedLoopError());
+    						" CL Err: " + RobotMap.driveTrainFLMotor.getClosedLoopError() +
+    						" getError: " + RobotMap.driveTrainFLMotor.getError());
+*/
+    	// Completion stats for each wheel
+    	System.out.println( //"FLpos: "  + (Math.round(RobotMap.driveTrainFLMotor.getPosition()*1000f)/1000f) +
+							" FLerr: " + RobotMap.driveTrainFLMotor.getClosedLoopError() +
+							//" FRpos: " + (Math.round(RobotMap.driveTrainFRMotor.getPosition()*1000f)/1000f) +
+							" FRerr: " + RobotMap.driveTrainFRMotor.getClosedLoopError() +
+							//" BLpos: " + (Math.round(RobotMap.driveTrainBLMotor.getPosition()*1000f)/1000f) +
+							" BLerr: " + RobotMap.driveTrainBLMotor.getClosedLoopError() +
+							//" BRpos: " + (Math.round(RobotMap.driveTrainBRMotor.getPosition()*1000f)/1000f) +
+							" BRerr: " + RobotMap.driveTrainBRMotor.getClosedLoopError());
     	
     	boolean distReached = (RobotMap.driveTrainFLMotor.getClosedLoopError() < 1400); //Number is arbitrary right now
         return false;//distReached; // Eventually OR in isTimedOut();
@@ -81,6 +123,9 @@ public class DriveWithPID extends Command {
     	// Eventually return back to drive mode here
     	// For now, just set the setpoint to zero?
     	RobotMap.driveTrainFLMotor.set(0);
+    	RobotMap.driveTrainFRMotor.set(0);
+    	RobotMap.driveTrainBLMotor.set(0);
+    	RobotMap.driveTrainBRMotor.set(0);
     	Robot.driveTrain.setDriveMode();
     }
 
@@ -93,4 +138,5 @@ public class DriveWithPID extends Command {
     //Member Variables
     double m_magDir;
     double m_dist;
+    double m_accel;
 }

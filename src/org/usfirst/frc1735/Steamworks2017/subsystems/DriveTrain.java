@@ -19,12 +19,14 @@ import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -111,8 +113,9 @@ public class DriveTrain extends Subsystem implements PIDOutput {
         bLMotor.reverseOutput(true);
 
         // Chose the sensor and direction
-    	fLMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-    	fLMotor.configEncoderCodesPerRev(1024); //CTRE_MAG says 4096 but that's with internal 4x upscale
+    	//fLMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+    	//fLMotor.configEncoderCodesPerRev(1024); //CTRE_MAG says 4096 but that's with internal 4x upscale
+    	fLMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
     	fLMotor.reverseSensor(true); //Assume inversion to match drivetrain power inversion on left side
     	fRMotor.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
     	fRMotor.reverseSensor(false); //Assume no inversion at this time.
@@ -124,7 +127,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	// Encoder setup:  Since we are using the CTRE Mag Encoders, we do not
     	// need to configure anything further
 		/* set the peak and nominal outputs, 12V means full (even if battery voltage is higher)*/
-    	fLMotor.configNominalOutputVoltage(+0f, -0f);
+    	fLMotor.configNominalOutputVoltage(+2.5f, -2.5f);
     	fLMotor.configPeakOutputVoltage(+12.0f, -12.0f);
     	fRMotor.configNominalOutputVoltage(+2.5f, -2.5f);
     	fRMotor.configPeakOutputVoltage(+12.0f, -12.0f);
@@ -140,33 +143,33 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	bLMotor.setProfile(0);
     	bRMotor.setProfile(0);
     	
-    	fLMotor.setF(0);//.30897);
-    	fRMotor.setF(0);//.30897);
-    	bLMotor.setF(0);//.30897);
-    	bRMotor.setF(0);//.30897);
-    	
-    	fLMotor.setP(1.0);
-    	fRMotor.setP(1.0);
-    	bLMotor.setP(1.0);
-    	bRMotor.setP(1.0);
-    	
-    	fLMotor.setI(0);
-    	fRMotor.setI(0);
-    	bLMotor.setI(0);
-    	bRMotor.setI(0);
-    	
-    	fLMotor.setD(0);
-    	fRMotor.setD(0);
-    	bLMotor.setD(0);
-    	bRMotor.setD(0);
+//    	fLMotor.setF(0.30897);
+//    	fRMotor.setF(0.30897);
+//    	bLMotor.setF(0.30897);
+//    	bRMotor.setF(0.30897);
+//    	
+//    	fLMotor.setP(1.0);
+//    	fRMotor.setP(1.0);
+//    	bLMotor.setP(1.0);
+//    	bRMotor.setP(1.0);
+//    	
+//    	fLMotor.setI(0);
+//    	fRMotor.setI(0);
+//    	bLMotor.setI(0);
+//    	bRMotor.setI(0);
+//    	
+//    	fLMotor.setD(0);
+//    	fRMotor.setD(0);
+//    	bLMotor.setD(0);
+//    	bRMotor.setD(0);
     	
 		/* set acceleration and vcruise velocity - see documentation */
-    	fLMotor.setMotionMagicCruiseVelocity(0); // In RPM.  Top speed is 5310 no-load * (14/50) * (14*50) = 416RPM
-    	fRMotor.setMotionMagicCruiseVelocity(0);
-    	bLMotor.setMotionMagicCruiseVelocity(0);
-    	bRMotor.setMotionMagicCruiseVelocity(0);
+    	fLMotor.setMotionMagicCruiseVelocity(450); // In RPM.  Top speed theory is 5310 no-load * (14/50) * (14*50) = 416RPM.  Actual measurements ~480 (~6000RPM motor)
+    	fRMotor.setMotionMagicCruiseVelocity(450);
+    	bLMotor.setMotionMagicCruiseVelocity(450);
+    	bRMotor.setMotionMagicCruiseVelocity(450);
     	
-    	fLMotor.setMotionMagicAcceleration(0); //In RPM/sec.  assume near-top-RPM top speed, and 1 second to accel, we want 400/RPM/sec
+    	fLMotor.setMotionMagicAcceleration(450); //In RPM/sec.  assume near-top-RPM top speed, and 1 second to accel, we want 400/RPM/sec
     	fRMotor.setMotionMagicAcceleration(0);
     	bLMotor.setMotionMagicAcceleration(0);
     	bRMotor.setMotionMagicAcceleration(0);
@@ -178,7 +181,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	bRMotor.enableBrakeMode(true);
    	
     	//Set the mode to Magic (for the master; slaves match for now)
-        fLMotor.changeControlMode(TalonControlMode.Position);//MotionMagic);
+        fLMotor.changeControlMode(TalonControlMode.MotionMagic);
         fRMotor.changeControlMode(TalonControlMode.MotionMagic);
         bLMotor.changeControlMode(TalonControlMode.MotionMagic);
         bRMotor.changeControlMode(TalonControlMode.MotionMagic);
@@ -196,12 +199,27 @@ public class DriveTrain extends Subsystem implements PIDOutput {
         fRMotor.setPosition(0);
         bLMotor.setPosition(0);
         bRMotor.setPosition(0);
+        
+        //Set the closed-loop allowable error.  Empirically on no-load, error was <15 units.
+        fLMotor.setAllowableClosedLoopErr(50);
+        fRMotor.setAllowableClosedLoopErr(50);
+        bLMotor.setAllowableClosedLoopErr(50);
+        bRMotor.setAllowableClosedLoopErr(50);
 
         // For testing only (when we drive only one of the four wheels)
         fLMotor.setSafetyEnabled(false);
         fRMotor.setSafetyEnabled(false);
         bLMotor.setSafetyEnabled(false);
         bRMotor.setSafetyEnabled(false);
+        
+        //Some other motor is encountering safety timeout.  Turn them ALL off to avoid stuttering
+        RobotMap.turretTurretTurner.setSafetyEnabled(false);
+        RobotMap.shooterShootMaster.setSafetyEnabled(false);
+        RobotMap.shooterShootFollower.setSafetyEnabled(false);
+        //RobotMap.gearVisionFakeMotor.setSafetyEnabled(false);
+        //RobotMap.feederFeederMotor.setSafetyEnabled(false);
+        //RobotMap.climberMotor.setSafetyEnabled(false);
+
     }
     
     public void drivetrainInit() {
@@ -245,8 +263,8 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	// Thus, this code can't be used unless we ditch the software PID and use the full "Motion Magic" feature of the Talons...
     	if (false) {
 	    	// No configEncoderCodesPerRev is needed for CTRE Mag Encoder.
-	    	fLMotor.configNominalOutputVoltage(+0f,  -0f);
-	    	fLMotor.configPeakOutputVoltage(+12f,  -12f);
+	    	//fLMotor.configNominalOutputVoltage(+0f,  -0f);
+	    	//fLMotor.configPeakOutputVoltage(+12f,  -12f);
 	    	
 	    	// @FIXME:  We might need to add a voltage ramp rate if we accellerate too quickly
 	    	//fLMotor.setVoltageRampRate(something)
@@ -260,7 +278,7 @@ public class DriveTrain extends Subsystem implements PIDOutput {
 	        /* set closed loop gains in slot0 */
 	        fLMotor.setProfile(0);
 	        fLMotor.setF(0);
-	        fLMotor.setP(0.1);
+	        fLMotor.setP(1);
 	        fLMotor.setI(0.0); 
 	        fLMotor.setD(0.0);
 
@@ -300,8 +318,6 @@ public class DriveTrain extends Subsystem implements PIDOutput {
     	RobotMap.driveTrainFRMotor.setEncPosition(0);
     	RobotMap.driveTrainBLMotor.setEncPosition(0);
     	RobotMap.driveTrainBRMotor.setEncPosition(0);
-
-
     }
 
     public void arcadeDrive(double moveValue,double rotateValue) {
